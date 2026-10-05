@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "807853365926",
+    "project_id": "golidoli",
+    "storage_bucket": "golidoli.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:807853365926:android:5a31c9fc9c35d64f207267",
+        "android_client_info": {
+          "package_name": "com.mastiadda.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "807853365926-1rhv4tvqdhlilkd3h8jaa7khbro0p037.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mastiadda.app",
+            "certificate_hash": "6c9516e73daa34598a44f042b86b4d1d7e109cdd"
+          }
+        },
+        {
+          "client_id": "807853365926-ad785gcjvkcq1oiusk3sn9uisc586k4q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuyBfZn_nR8RvX_yz3oBQTNEzkA-9hQ2Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "807853365926-ad785gcjvkcq1oiusk3sn9uisc586k4q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
