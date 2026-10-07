@@ -1,7 +1,7 @@
 class AppUrl {
-  static const String baseUrl = 'http://192.168.1.11:5000';
-  // static const String baseUrl = 'https://api.mastiadda.com';
-  static const String webBaseUrl = 'https://mastiadda.com';
+  // static const String baseUrl = 'http://192.168.1.11:5000';
+  static const String baseUrl = 'https://api.mastiadda.in';
+  static const String webBaseUrl = 'https://mastiadda.in';
   // static const String webBaseUrl = 'https://sage-praline-c605a4.netlify.app';
 
   // static const String baseUrl = 'https://goli-doli-ott-backend.vercel.app';
