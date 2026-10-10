@@ -30,18 +30,18 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDuyBfZn_nR8RvX_yz3oBQTNEzkA-9hQ2Q',
-    appId: '1:807853365926:android:5a31c9fc9c35d64f207267',
-    messagingSenderId: '807853365926',
-    projectId: 'masti-adda',
-    storageBucket: 'masti-adda.firebasestorage.app',
+    apiKey: 'AIzaSyBjpkOiw8RebHvN_pInr560y1UmK5N5TC4',
+    appId: '1:163739706839:android:b8020bc231fac0730f1792',
+    messagingSenderId: '163739706839',
+    projectId: 'masti-adda-f4bdb',
+    storageBucket: 'masti-adda-f4bdb.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDuyBfZn_nR8RvX_yz3oBQTNEzkA-9hQ2Q',
-    appId: '1:807853365926:ios:5a31c9fc9c35d64f207267',
-    messagingSenderId: '807853365926',
-    projectId: 'masti-adda',
-    storageBucket: 'masti-adda.firebasestorage.app',
+    apiKey: 'AIzaSyBjpkOiw8RebHvN_pInr560y1UmK5N5TC4',
+    appId: '1:163739706839:android:b8020bc231fac0730f1792',
+    messagingSenderId: '163739706839',
+    projectId: 'masti-adda-f4bdb',
+    storageBucket: 'masti-adda-f4bdb.firebasestorage.app',
   );
 }

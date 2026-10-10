@@ -8,7 +8,7 @@ class GoogleAuthService {
 
   /// Web Client ID from Firebase / Google Cloud Console (client_type: 3 in google-services.json)
   static const String webClientId =
-      '807853365926-ad785gcjvkcq1oiusk3sn9uisc586k4q.apps.googleusercontent.com';
+      '163739706839-ffsbr3rfqb36t4moacdv48v1lu6hb8kh.apps.googleusercontent.com';
 
   late final GoogleSignIn _googleSignIn = GoogleSignIn(
     clientId: kIsWeb ? webClientId : null,
