@@ -20,13 +20,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyC1IIV8KUw2SuVdrN2SvWwE94MGixeSmnY',
-    appId: '1:807853365926:web:d4346503b77b59f1207267',
-    messagingSenderId: '807853365926',
-    projectId: 'masti-adda',
-    authDomain: 'masti-adda.firebaseapp.com',
-    storageBucket: 'masti-adda.firebasestorage.app',
-    measurementId: 'G-DNE0L66MV9',
+    apiKey: 'AIzaSyCnP1vZvgzhMyzCRcsKEF0pi7wN3S8-yNE',
+    appId: '1:163739706839:web:1fe18af5e37d919f0f1792',
+    messagingSenderId: '163739706839',
+    projectId: 'masti-adda-f4bdb',
+    authDomain: 'masti-adda-f4bdb.firebaseapp.com',
+    storageBucket: 'masti-adda-f4bdb.firebasestorage.app',
+    measurementId: 'G-6GY2TN93JV',
   );
 
   static const FirebaseOptions android = FirebaseOptions(

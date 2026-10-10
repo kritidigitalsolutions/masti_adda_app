@@ -30,6 +30,13 @@ class GoogleAuthService {
       final account = await _googleSignIn.signIn();
       return account;
     } catch (e) {
+      final errorStr = e.toString().toLowerCase();
+      if (errorStr.contains('popup_closed') ||
+          errorStr.contains('cancelled') ||
+          errorStr.contains('sign_in_canceled')) {
+        debugPrint('Google Sign-In cancelled or popup closed by user.');
+        return null;
+      }
       debugPrint('Google Sign-In Error: $e');
       rethrow;
     }
