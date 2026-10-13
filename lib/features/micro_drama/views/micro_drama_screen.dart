@@ -690,7 +690,9 @@ class _MicroDramaScreenState extends State<MicroDramaScreen> {
   }
 
   Widget _buildDramaCard(Microdrama drama) {
-    final bannerUrl = formatMediaUrl(drama.banner);
+    final posterUrl = formatMediaUrl(
+      drama.poster.isNotEmpty ? drama.poster : drama.banner,
+    );
     return GestureDetector(
       onTap: () {
         Navigator.of(context)
@@ -707,8 +709,8 @@ class _MicroDramaScreenState extends State<MicroDramaScreen> {
           fit: StackFit.expand,
           children: [
             Image.network(
-              bannerUrl,
-              fit: BoxFit.cover,
+              posterUrl,
+              fit: BoxFit.fill,
               errorBuilder: (_, _, _) => Container(
                 color: AppColors.cardColor,
                 child: const Center(

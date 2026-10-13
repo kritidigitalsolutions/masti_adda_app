@@ -26,7 +26,15 @@ class UserModel {
     final ap = authProvider.trim().toLowerCase();
     if (ap == 'phone' || ap == 'mobile' || ap == 'otp') return true;
     if (ap == 'google' || ap == 'email') return false;
-    return phone.isNotEmpty && email.isEmpty;
+    return phone.trim().isNotEmpty && email.trim().isEmpty;
+  }
+
+  /// True if user logged in / registered via Email or Google
+  bool get isEmailAuth {
+    final ap = authProvider.trim().toLowerCase();
+    if (ap == 'google' || ap == 'email') return true;
+    if (ap == 'phone' || ap == 'mobile' || ap == 'otp') return false;
+    return email.trim().isNotEmpty && phone.trim().isEmpty;
   }
 
   /// Mobile number can only be updated if user logged in via Google/Email

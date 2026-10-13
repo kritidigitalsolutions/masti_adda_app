@@ -218,19 +218,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ],
 
               _InputField(label: 'Full Name', controller: _nameController),
-              _InputField(
-                label: 'Mobile Number',
-                controller: _phoneController,
-                enabled: !isPhoneAuth,
-                keyboardType: TextInputType.phone,
-                helperText: isPhoneAuth
-                    ? 'Mobile number cannot be changed for phone login accounts'
-                    : null,
-              ),
+              if (isPhoneAuth)
+                _InputField(
+                  label: 'Mobile Number',
+                  controller: _phoneController,
+                  enabled: false,
+                  keyboardType: TextInputType.phone,
+                  helperText:
+                      'Mobile number cannot be changed for phone login accounts',
+                ),
               _InputField(
                 label: 'Email Address',
                 controller: _emailController,
+                enabled: isPhoneAuth,
                 keyboardType: TextInputType.emailAddress,
+                helperText: !isPhoneAuth
+                    ? 'Email address cannot be changed for Google login accounts'
+                    : null,
               ),
               const SizedBox(height: 18),
               ProfilePrimaryButton(

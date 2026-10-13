@@ -110,17 +110,20 @@ class ContinueWatchingItem {
   }
 
   String get displayPoster {
-    if (content != null && content!.poster.isNotEmpty) {
-      return content!.poster;
+    if (episode != null && episode!.thumbnail.isNotEmpty) {
+      return episode!.thumbnail;
     }
     if (content != null && content!.banner.isNotEmpty) {
       return content!.banner;
     }
-    if (directPoster.isNotEmpty) {
-      return directPoster;
+    if (content != null && content!.poster.isNotEmpty) {
+      return content!.poster;
     }
     if (directBanner.isNotEmpty) {
       return directBanner;
+    }
+    if (directPoster.isNotEmpty) {
+      return directPoster;
     }
     return '';
   }

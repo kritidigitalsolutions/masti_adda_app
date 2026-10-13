@@ -264,7 +264,20 @@ class AuthDatasource {
     try {
       final response = await _apiService.getApi(AppUrl.fetchProfile);
       if (response != null && response["user"] != null) {
-        final userModel = UserModel.fromJson(response["user"]);
+        final userData = Map<String, dynamic>.from(response["user"]);
+        final String ap = (userData["authProvider"] ??
+                userData["provider"] ??
+                userData["authType"] ??
+                userData["loginType"] ??
+                "")
+            .toString();
+        if (ap.isEmpty) {
+          final savedMethod = await StorageService.getLoginMethod();
+          if (savedMethod != null && savedMethod.isNotEmpty) {
+            userData["authProvider"] = savedMethod;
+          }
+        }
+        final userModel = UserModel.fromJson(userData);
         await StorageService.saveUser(userModel);
         return userModel;
       }
