@@ -112,6 +112,15 @@ class LoginScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
+                  // Apple
+                  Obx(
+                    () => _AppleButton(
+                      isLoading: authController.isAppleLoading.value,
+                      onTap: () => authController.loginWithApple(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
                   // Google
                   Obx(
                     () => _SocialButton(
@@ -166,7 +175,7 @@ class _MastiAddaText extends StatelessWidget {
       text: TextSpan(
         children: [
           TextSpan(
-            text: 'Goli',
+            text: 'Masti',
             style: GoogleFonts.poppins(
               fontSize: 36,
               fontWeight: FontWeight.w900,
@@ -174,7 +183,7 @@ class _MastiAddaText extends StatelessWidget {
             ),
           ),
           TextSpan(
-            text: 'Doli',
+            text: 'Adda',
             style: GoogleFonts.poppins(
               fontSize: 36,
               fontWeight: FontWeight.w900,
@@ -267,6 +276,56 @@ class _SocialButton extends StatelessWidget {
                   Image.asset(image, width: 22, height: 22),
                   const SizedBox(width: 12),
                   Text(label, style: text14(color: AppColors.textColor)),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+// ─── Apple social auth button (Apple HIG compliant) ───
+class _AppleButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final bool isLoading;
+
+  const _AppleButton({
+    required this.onTap,
+    this.isLoading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 52,
+      child: OutlinedButton(
+        onPressed: isLoading ? null : onTap,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.white,
+          side: BorderSide(color: AppColors.borderColor, width: 1.2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        child: isLoading
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.apple, size: 24, color: Colors.black),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Continue with Apple',
+                    style: text14(color: Colors.black, fontWeight: FontWeight.w600),
+                  ),
                 ],
               ),
       ),

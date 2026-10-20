@@ -36,7 +36,7 @@ class NotificationService extends GetxController {
   String? get currentToken => _currentToken;
 
   Future<String?> getFcmToken() async {
-    if (GetPlatform.isWeb) return null;
+    if (GetPlatform.isWeb || GetPlatform.isIOS) return null;
     try {
       _currentToken ??= await _firebaseMessaging.getToken();
       return _currentToken;
@@ -47,8 +47,8 @@ class NotificationService extends GetxController {
   }
 
   Future<void> init() async {
-    if (GetPlatform.isWeb) {
-      print("🌐 Notifications skipped on Web for now.");
+    if (GetPlatform.isWeb || GetPlatform.isIOS) {
+      print("🌐 Notifications/Firebase skipped on Web & iOS for now.");
       return;
     }
     print("🚀 NotificationService INIT STARTED");
@@ -165,7 +165,7 @@ class NotificationService extends GetxController {
 
   /// 📡 Upload FCM Token to Backend
   Future<void> uploadToken() async {
-    if (GetPlatform.isWeb) return;
+    if (GetPlatform.isWeb || GetPlatform.isIOS) return;
     try {
       final token = await StorageService.getToken();
       if (token == null || token.isEmpty) {

@@ -224,6 +224,100 @@ class AuthDatasource {
     }
   }
 
+  Future<VerifyOtpResult> appleLogin({
+    required String identityToken,
+    String? authorizationCode,
+    String? email,
+    String? name,
+    String? userIdentifier,
+    String? fcmToken,
+  }) async {
+    try {
+      final Map<String, dynamic> body = {
+        "identityToken": identityToken,
+        "token": identityToken,
+        if (authorizationCode != null && authorizationCode.isNotEmpty) "authorizationCode": authorizationCode,
+        if (email != null && email.isNotEmpty) "email": email,
+        if (name != null && name.isNotEmpty) "name": name,
+        if (userIdentifier != null && userIdentifier.isNotEmpty) "userIdentifier": userIdentifier,
+        if (fcmToken != null && fcmToken.isNotEmpty) "fcmToken": fcmToken,
+      };
+
+      debugPrint("Sending Apple Login Payload: $body");
+      final response = await _apiService.postApi(AppUrl.appleLogin, body);
+
+      if (response != null) {
+        final token = response["token"] ?? "";
+        if (token.isNotEmpty) {
+          await StorageService.saveToken(token);
+          _apiService.setToken(token);
+        }
+        await StorageService.saveLoginMethod('apple');
+
+        UserModel? userModel;
+        Map<String, dynamic>? userData;
+        if (response["user"] is Map) {
+          userData = Map<String, dynamic>.from(response["user"]);
+          userData["authProvider"] = "apple";
+          userModel = UserModel.fromJson(userData);
+          await StorageService.saveUser(userModel);
+        }
+
+        final bool isNewUser = response["isNewUser"] == true ||
+            (userData != null && userData["isNewUser"] == true) ||
+            response["newUser"] == true ||
+            (userData != null && userData["newUser"] == true) ||
+            response["isRegistered"] == false ||
+            (userData != null && userData["isRegistered"] == false);
+
+        final bool isExplicitlyIncomplete =
+            (userData != null &&
+                (userData["profileComplete"] == false ||
+                    userData["isProfileComplete"] == false ||
+                    userData["profileCompleted"] == false)) ||
+            response["profileComplete"] == false ||
+            response["isProfileComplete"] == false ||
+            response["profileCompleted"] == false;
+
+        final bool hasExplicitProfileComplete =
+            (userData != null &&
+                (userData["profileComplete"] == true ||
+                    userData["isProfileComplete"] == true ||
+                    userData["profileCompleted"] == true)) ||
+            response["profileComplete"] == true ||
+            response["isProfileComplete"] == true ||
+            response["profileCompleted"] == true;
+
+        final rawName = userModel?.name.trim() ?? '';
+        final bool hasValidCustomName = rawName.isNotEmpty &&
+            rawName.toLowerCase() != 'user' &&
+            rawName.toLowerCase() != 'new user' &&
+            rawName.toLowerCase() != 'mastiadda user' &&
+            rawName != userModel?.phone.trim() &&
+            rawName != (userModel?.email.trim() ?? '');
+
+        final bool profileComplete = !isNewUser &&
+            !isExplicitlyIncomplete &&
+            (hasExplicitProfileComplete || hasValidCustomName);
+
+        return VerifyOtpResult(
+          success: response["success"] == true || token.isNotEmpty,
+          profileComplete: profileComplete,
+          isNewUser: isNewUser,
+          token: token,
+          message: response["message"]?.toString(),
+          user: userModel,
+          rawUser: userData,
+        );
+      }
+
+      return VerifyOtpResult.failure("Invalid response from server");
+    } catch (e) {
+      debugPrint("Apple Login Error: $e");
+      return VerifyOtpResult.failure(e.toString());
+    }
+  }
+
   Future<bool> completeProfile({required UserPayload userPayload}) async {
     try {
       final response = await _apiService.postApi(

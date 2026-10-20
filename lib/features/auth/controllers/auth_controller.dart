@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:masti_adda_app/core/services/apple_auth_service.dart';
 import 'package:masti_adda_app/core/services/firebase_service.dart';
 import 'package:masti_adda_app/core/services/google_auth_service.dart';
 import 'package:masti_adda_app/features/auth/repositories/auth_datasource.dart';
@@ -188,6 +190,10 @@ class AuthController extends GetxController {
 
   // ── Google Sign-In ──────────────────────────────────
   final RxBool isGoogleLoading = false.obs;
+
+  // ── Apple Sign-In ───────────────────────────────────
+  final AppleAuthService appleAuthService = AppleAuthService();
+  final RxBool isAppleLoading = false.obs;
 
   // ── Mobile ──────────────────────────────────────────
   final TextEditingController mobileController = TextEditingController();
@@ -520,6 +526,109 @@ class AuthController extends GetxController {
       Get.snackbar(
         "Error",
         "Google Sign-In failed: ${e.toString()}",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+    }
+  }
+
+  // ── Apple Sign-In ───────────────────────────────────
+  Future<void> loginWithApple() async {
+    if (isAppleLoading.value) return;
+
+    try {
+      isAppleLoading.value = true;
+
+      if (!kIsWeb &&
+          defaultTargetPlatform != TargetPlatform.iOS &&
+          defaultTargetPlatform != TargetPlatform.macOS) {
+        isAppleLoading.value = false;
+        Get.snackbar(
+          "Notice",
+          "Sign in with Apple is supported on iOS and macOS devices.",
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+        );
+        return;
+      }
+
+      final credential = await appleAuthService.signIn();
+
+      if (credential == null) {
+        isAppleLoading.value = false;
+        return;
+      }
+
+      final identityToken = credential.identityToken;
+      if (identityToken == null || identityToken.isEmpty) {
+        isAppleLoading.value = false;
+        Get.snackbar(
+          "Login Failed",
+          "Failed to get Apple identity token. Please try again.",
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+        );
+        return;
+      }
+
+      String? fcmToken;
+      try {
+        if (Get.isRegistered<NotificationService>()) {
+          fcmToken = await NotificationService.to.getFcmToken();
+        }
+      } catch (e) {
+        debugPrint("FCM token fetch error on Apple Login: $e");
+      }
+
+      final fullName = [
+        credential.givenName,
+        credential.familyName,
+      ].where((s) => s != null && s.isNotEmpty).join(' ');
+
+      final result = await authDatasource.appleLogin(
+        identityToken: identityToken,
+        authorizationCode: credential.authorizationCode,
+        email: credential.email,
+        name: fullName.isNotEmpty ? fullName : null,
+        userIdentifier: credential.userIdentifier,
+        fcmToken: fcmToken,
+      );
+
+      isAppleLoading.value = false;
+
+      if (result.success) {
+        try {
+          if (Get.isRegistered<NotificationService>()) {
+            NotificationService.to.uploadToken();
+          }
+        } catch (e) {
+          debugPrint("FCM upload error on Apple Login: $e");
+        }
+
+        if (Get.isRegistered<AiReelsController>()) {
+          Get.find<AiReelsController>().resetState();
+          Get.delete<AiReelsController>(force: true);
+        }
+
+        Get.offAllNamed(AppRoutes.home);
+      } else {
+        Get.snackbar(
+          "Login Failed",
+          result.message ?? "Failed to sign in with Apple. Please try again.",
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+        );
+      }
+    } catch (e) {
+      isAppleLoading.value = false;
+      debugPrint("Apple Sign In Exception: $e");
+      Get.snackbar(
+        "Error",
+        "Apple Sign-In failed: ${e.toString()}",
         backgroundColor: Colors.red,
         colorText: Colors.white,
         snackPosition: SnackPosition.TOP,

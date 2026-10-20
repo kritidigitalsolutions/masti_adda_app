@@ -32,12 +32,14 @@ class OnboardingScreen extends StatelessWidget {
 
           Positioned(
             right: 20,
-            top: 20,
-            child: CustomTextButton(
-              title: "Skip",
-              onTap: () {
-                Get.toNamed(AppRoutes.login);
-              },
+            top: 10,
+            child: SafeArea(
+              child: CustomTextButton(
+                title: "Skip",
+                onTap: () {
+                  Get.offAllNamed(AppRoutes.login);
+                },
+              ),
             ),
           ),
 
