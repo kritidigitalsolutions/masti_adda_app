@@ -32,8 +32,8 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
 
   SubscriptionStatusController get _subController =>
       Get.isRegistered<SubscriptionStatusController>()
-          ? Get.find<SubscriptionStatusController>()
-          : Get.put(SubscriptionStatusController(), permanent: true);
+      ? Get.find<SubscriptionStatusController>()
+      : Get.put(SubscriptionStatusController(), permanent: true);
 
   @override
   void initState() {
@@ -69,7 +69,8 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
     final String? promoCode = queryParams['promoCode'];
     final String? source = queryParams['source'];
 
-    final String? merchantTxnId = queryParams['merchantTxnId'] ?? queryParams['transactionId'];
+    final String? merchantTxnId =
+        queryParams['merchantTxnId'] ?? queryParams['transactionId'];
     final String? paymentId = queryParams['paymentId'];
     final String? checksum = queryParams['checksum'];
 
@@ -89,6 +90,15 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
       if (loginSuccess && planId != null && planId.isNotEmpty) {
         if (_planController.allPlans.value?.plans.isEmpty ?? true) {
           await _planController.fetchAllPlans();
+        }
+
+        // Auto-select the requested plan matching planId from URL
+        if (_planController.allPlans.value != null) {
+          final matching = _planController.allPlans.value!.plans
+              .firstWhereOrNull((p) => p.id == planId);
+          if (matching != null) {
+            _planController.selectedPlan.value = matching;
+          }
         }
 
         // Auto-initiate payment if redirected from mobile app
@@ -145,7 +155,8 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
       final queryParams = _getAllQueryParams();
       final pending = await StorageService.getPendingPayment();
 
-      String? txnId = queryParams['txnId'] ??
+      String? txnId =
+          queryParams['txnId'] ??
           queryParams['clientTxnId'] ??
           queryParams['merchantTxnId'] ??
           queryParams['transactionId'] ??
@@ -154,43 +165,27 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
           queryParams['sabpaisaTxnId'] ??
           queryParams['orderId'] ??
           pending?['txnId'] ??
-          (kIsWeb ? WebPaymentHelper.getLocalStorageItem('pending_txn_id') : null);
+          (kIsWeb
+              ? WebPaymentHelper.getLocalStorageItem('pending_txn_id')
+              : null);
 
-      String planId = queryParams['planId'] ??
+      String planId =
+          queryParams['planId'] ??
           pending?['planId'] ??
-          (kIsWeb ? WebPaymentHelper.getLocalStorageItem('pending_plan_id') : null) ??
+          (kIsWeb
+              ? WebPaymentHelper.getLocalStorageItem('pending_plan_id')
+              : null) ??
           '';
 
-      String? paymentId = queryParams['paymentId'] ??
+      String? paymentId =
+          queryParams['paymentId'] ??
           queryParams['sppayId'] ??
           pending?['paymentId'] ??
-          (kIsWeb ? WebPaymentHelper.getLocalStorageItem('pending_payment_id') : null);
+          (kIsWeb
+              ? WebPaymentHelper.getLocalStorageItem('pending_payment_id')
+              : null);
 
-      if ((txnId == null || txnId.isEmpty) && pending == null && (kIsWeb ? WebPaymentHelper.getLocalStorageItem('pending_txn_id') == null : true)) {
-        return;
-      }
-
-      if (planId.isEmpty) {
-        planId = _planController.selectedPlan.value?.id ??
-            _planController.allPlans.value?.plans.firstOrNull?.id ??
-            '';
-      }
-
-      if (mounted) {
-        setState(() => _isProcessingPayment = true);
-      }
-
-      final repo = PaymentRepo();
-      debugPrint("WebSubscriptionScreen auto-verifying: txnId=$txnId, planId=$planId, params=$queryParams");
-
-      final verifyRes = await repo.verifyPayment(
-        transactionId: txnId ?? '',
-        planId: planId,
-        paymentId: paymentId,
-        extraData: queryParams,
-      );
-
-      // Clear pending payment from localStorage
+      // Always clear pending payment from storage immediately so stale checks never re-trigger on refresh
       await StorageService.clearPendingPayment();
       if (kIsWeb) {
         try {
@@ -200,6 +195,34 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
         } catch (_) {}
       }
 
+      // If no valid non-empty transaction id, there is nothing to verify
+      if (txnId == null || txnId.trim().isEmpty) {
+        return;
+      }
+
+      if (planId.isEmpty) {
+        planId =
+            _planController.selectedPlan.value?.id ??
+            _planController.allPlans.value?.plans.firstOrNull?.id ??
+            '';
+      }
+
+      if (mounted) {
+        setState(() => _isProcessingPayment = true);
+      }
+
+      final repo = PaymentRepo();
+      debugPrint(
+        "WebSubscriptionScreen auto-verifying: txnId=$txnId, planId=$planId, params=$queryParams",
+      );
+
+      final verifyRes = await repo.verifyPayment(
+        transactionId: txnId.trim(),
+        planId: planId,
+        paymentId: paymentId,
+        extraData: queryParams,
+      );
+
       // Check user subscription status
       final subStatusController = _subController;
       await subStatusController.checkStatus();
@@ -208,9 +231,12 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
       if (mounted) {
         setState(() => _isProcessingPayment = false);
 
-        if ((verifyRes != null && verifyRes.success) || isPremium) {
-          final plan = _planController.allPlans.value?.plans
-                  .firstWhereOrNull((p) => p.id == planId) ??
+        // Show VIP success dialog ONLY if payment verification succeeded AND user's active status is confirmed on server
+        if (verifyRes != null && verifyRes.success && isPremium) {
+          final plan =
+              _planController.allPlans.value?.plans.firstWhereOrNull(
+                (p) => p.id == planId,
+              ) ??
               _planController.selectedPlan.value ??
               _planController.allPlans.value?.plans.firstOrNull;
 
@@ -250,7 +276,8 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
   Future<void> _startPayment() async {
     await WebAuthGuard.requireAuth(
       context: context,
-      message: 'Please sign in to purchase a subscription plan and unlock VIP content.',
+      message:
+          'Please sign in to purchase a subscription plan and unlock VIP content.',
       onSuccess: () {
         _processPurchase();
       },
@@ -270,7 +297,8 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
       return;
     }
 
-    final selectedPlan = _planController.selectedPlan.value ??
+    final selectedPlan =
+        _planController.selectedPlan.value ??
         _planController.allPlans.value?.plans.firstOrNull;
 
     if (selectedPlan == null) {
@@ -308,7 +336,9 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
           );
         }
       } else {
-        if (mounted && result.errorMessage != null && result.errorMessage!.isNotEmpty) {
+        if (mounted &&
+            result.errorMessage != null &&
+            result.errorMessage!.isNotEmpty) {
           Get.snackbar(
             'Payment Failed',
             result.errorMessage ?? 'Payment could not be completed.',
@@ -449,7 +479,10 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
                 _buildBanner(),
                 const SizedBox(height: 24),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 8,
+                  ),
                   child: Text(
                     'Select a Plan',
                     style: text18(
@@ -507,21 +540,17 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
           onPressed: () async {
             await _subController.checkStatus();
             final isPremium = _subController.isPremiumUser.value;
-            if (isPremium) {
-              final plan = _planController.selectedPlan.value ??
-                  _planController.allPlans.value?.plans.firstOrNull;
-              if (plan != null && mounted) {
-                _showPaymentSuccessDialog(plan);
-              }
-            } else {
-              Get.snackbar(
-                'Status Refreshed',
-                'No active subscription found.',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: AppColors.surfaceColor,
-                colorText: Colors.white,
-              );
-            }
+            Get.snackbar(
+              'Subscription Status',
+              isPremium
+                  ? 'Your VIP subscription is active.'
+                  : 'No active subscription found.',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: isPremium
+                  ? Colors.green.withValues(alpha: 0.8)
+                  : AppColors.surfaceColor,
+              colorText: Colors.white,
+            );
           },
           icon: const Icon(Icons.refresh_rounded, color: AppColors.white),
           tooltip: 'Check Status',
@@ -809,7 +838,9 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
                     plan.name,
                     style: text18(
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? AppColors.white : AppColors.secondaryTextColor,
+                      color: isSelected
+                          ? AppColors.white
+                          : AppColors.secondaryTextColor,
                     ),
                   ),
                 ),
@@ -828,7 +859,7 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '/${plan.duration}d',
+                      '/${plan.duration} Days',
                       style: text12(color: AppColors.hintTextColor),
                     ),
                   ],
@@ -968,10 +999,7 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
           Icon(Icons.check_circle_rounded, color: checkColor, size: 18),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              label,
-              style: text13(color: color),
-            ),
+            child: Text(label, style: text13(color: color)),
           ),
         ],
       ),
@@ -1026,7 +1054,9 @@ class _WebSubscriptionScreenState extends State<WebSubscriptionScreen> {
             ],
             Expanded(
               child: GestureDetector(
-                onTap: _isProcessingPayment || isSubscribed ? null : _startPayment,
+                onTap: _isProcessingPayment || isSubscribed
+                    ? null
+                    : _startPayment,
                 child: Container(
                   height: 50,
                   decoration: BoxDecoration(

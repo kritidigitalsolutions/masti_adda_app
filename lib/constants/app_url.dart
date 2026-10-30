@@ -1,6 +1,8 @@
 class AppUrl {
-  // static const String baseUrl = 'http://192.168.1.11:5000';
+  //   static const String baseUrl = 'http://192.168.1.2:5000';
   static const String baseUrl = 'https://api.mastiadda.in';
+  // static const String webBaseUrl = 'http://192.168.1.2:3000';
+  // static const String webBaseUrl = 'http://192.168.1.2:5000';
   static const String webBaseUrl = 'https://mastiadda.in';
   // static const String webBaseUrl = 'https://sage-praline-c605a4.netlify.app';
   // static const String baseUrl = 'https://goli-doli-ott-backend.vercel.app';
@@ -38,12 +40,23 @@ class AppUrl {
       "$baseUrl/api/content/?search=$query";
 
   static String createOrder = "$baseUrl/api/payment/create-order";
+  static String initiatePayment = "$baseUrl/api/payment/initiate";
   static String verifyPayment = "$baseUrl/api/payment/verify";
+  static String paymentStatus(String txnId) =>
+      "$baseUrl/api/payment/status/$txnId";
   static const String subscriptionStatus = "$baseUrl/api/subscription/status";
 
   static const String webSubscription = "$webBaseUrl/subscription";
 
-  // Home Banners & Intro Screens
+  // Web Page Layout APIs (Web Home Page Only)
+  static const String webpageLayoutBanners =
+      "$baseUrl/api/webpage-layout/banners";
+  static const String webpageLayoutSections =
+      "$baseUrl/api/webpage-layout/sections";
+  static String webpageLayoutSectionDetail(String slug) =>
+      "$baseUrl/api/webpage-layout/sections/$slug";
+
+  // Home Banners & Intro Screens (Mobile App)
   static const String homeBanners = "$baseUrl/api/home-banners";
   static const String introScreens = "$baseUrl/api/intro-screens";
 

@@ -8,6 +8,7 @@ import 'package:masti_adda_app/core/services/firebase_service.dart';
 import 'package:masti_adda_app/core/services/google_auth_service.dart';
 import 'package:masti_adda_app/features/auth/repositories/auth_datasource.dart';
 import 'package:masti_adda_app/features/home/controllers/ai_reels_controller.dart';
+import 'package:masti_adda_app/features/profile/controllers/subscription_status_controller.dart';
 import 'package:masti_adda_app/routes/app_routes.dart';
 
 import '../../../core/services/storage_service.dart';
@@ -343,6 +344,9 @@ class AuthController extends GetxController {
           Get.find<AiReelsController>().resetState();
           Get.delete<AiReelsController>(force: true);
         }
+        if (Get.isRegistered<SubscriptionStatusController>()) {
+          Get.find<SubscriptionStatusController>().checkStatus();
+        }
         if (!result.profileComplete) {
           Get.offAllNamed(
             AppRoutes.createAccount,
@@ -505,6 +509,10 @@ class AuthController extends GetxController {
           debugPrint("FCM upload error on Google Login: $e");
         }
 
+        if (Get.isRegistered<SubscriptionStatusController>()) {
+          Get.find<SubscriptionStatusController>().checkStatus();
+        }
+
         if (Get.isRegistered<AiReelsController>()) {
           Get.find<AiReelsController>().resetState();
           Get.delete<AiReelsController>(force: true);
@@ -606,6 +614,10 @@ class AuthController extends GetxController {
           }
         } catch (e) {
           debugPrint("FCM upload error on Apple Login: $e");
+        }
+
+        if (Get.isRegistered<SubscriptionStatusController>()) {
+          Get.find<SubscriptionStatusController>().checkStatus();
         }
 
         if (Get.isRegistered<AiReelsController>()) {

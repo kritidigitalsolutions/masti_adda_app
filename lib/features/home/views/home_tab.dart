@@ -20,6 +20,7 @@ import 'package:masti_adda_app/features/movie/controllers/movie_controller.dart'
 import 'package:masti_adda_app/features/movie/models/MovieModel.dart';
 import 'package:masti_adda_app/features/movie/views/movie_details_screen.dart';
 import 'package:masti_adda_app/features/profile/controllers/profile_controller.dart';
+import 'package:masti_adda_app/features/profile/controllers/subscription_status_controller.dart';
 import 'package:masti_adda_app/features/profile/controllers/watchlist_controller.dart';
 import 'package:masti_adda_app/features/web_series/controllers/series_controller.dart';
 import 'package:masti_adda_app/features/web_series/model/SeriesModel.dart';
@@ -153,6 +154,8 @@ class _HomeTabState extends State<HomeTab> {
       _cwController.fetchForHome(),
       _watchlistController.fetchWatchlist(),
       _fetchProfileController.fetchProfile(),
+      if (Get.isRegistered<SubscriptionStatusController>())
+        Get.find<SubscriptionStatusController>().checkStatus(),
     ]);
   }
 

@@ -21,8 +21,8 @@ class SubscriptionScreen extends StatefulWidget {
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
   SubscriptionStatusController get _subController =>
       Get.isRegistered<SubscriptionStatusController>()
-          ? Get.find<SubscriptionStatusController>()
-          : Get.put(SubscriptionStatusController(), permanent: true);
+      ? Get.find<SubscriptionStatusController>()
+      : Get.put(SubscriptionStatusController(), permanent: true);
 
   late final PlanController _controller;
   late final PaymentController _paymentController;
@@ -35,6 +35,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     _controller = Get.put(PlanController());
     _paymentController = Get.put(PaymentController());
     _profileController = Get.put(ProfileController());
+    _subController.checkStatus(verify: true);
     _controller.fetchAllPlans().then((_) {
       if (_controller.selectedPlan.value != null && mounted) {
         setState(() {
@@ -56,7 +57,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       return;
     }
 
-    final selectedPlan = _controller.selectedPlan.value ??
+    final selectedPlan =
+        _controller.selectedPlan.value ??
         _controller.allPlans.value?.plans.firstOrNull;
 
     if (selectedPlan == null) {
@@ -91,7 +93,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             Expanded(
               child: RefreshIndicator(
                 onRefresh: () async {
-                  await _controller.fetchAllPlans();
+                  await Future.wait([
+                    _controller.fetchAllPlans(),
+                    _subController.checkStatus(verify: true),
+                  ]);
                 },
                 color: AppColors.primaryColor,
                 backgroundColor: AppColors.surfaceColor,
@@ -121,9 +126,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         horizontal: 16,
                         vertical: 4,
                       ),
-                      sliver: SliverToBoxAdapter(
-                        child: _buildPlansList(),
-                      ),
+                      sliver: SliverToBoxAdapter(child: _buildPlansList()),
                     ),
                     const SliverToBoxAdapter(child: SizedBox(height: 16)),
                   ],
@@ -444,7 +447,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     plan.name,
                     style: text16(
                       fontWeight: FontWeight.bold,
-                      color: isSelected ? AppColors.white : AppColors.secondaryTextColor,
+                      color: isSelected
+                          ? AppColors.white
+                          : AppColors.secondaryTextColor,
                     ),
                   ),
                 ),
@@ -463,7 +468,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '/${plan.duration}d',
+                      '/${plan.duration} Days',
                       style: text11(color: AppColors.hintTextColor),
                     ),
                   ],
@@ -597,10 +602,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           Icon(Icons.check_circle_rounded, color: checkColor, size: 16),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              label,
-              style: text12(color: color),
-            ),
+            child: Text(label, style: text12(color: color)),
           ),
         ],
       ),
@@ -614,9 +616,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       decoration: BoxDecoration(
         color: AppColors.surfaceColor,
         border: Border(
-          top: BorderSide(
-            color: AppColors.borderColor.withValues(alpha: 0.4),
-          ),
+          top: BorderSide(color: AppColors.borderColor.withValues(alpha: 0.4)),
         ),
       ),
       child: Obx(() {
@@ -670,4 +670,3 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     );
   }
 }
-

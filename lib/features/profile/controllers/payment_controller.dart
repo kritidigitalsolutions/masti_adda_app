@@ -9,6 +9,8 @@ import 'package:masti_adda_app/features/profile/models/response/plan_model.dart'
 
 class PaymentController extends GetxController with WidgetsBindingObserver {
   final RxBool isProcessing = false.obs;
+  bool _expectingPaymentReturn = false;
+  bool _wasPremiumBeforeRedirect = false;
 
   @override
   void onInit() {
@@ -18,14 +20,15 @@ class PaymentController extends GetxController with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.resumed && _expectingPaymentReturn) {
+      _expectingPaymentReturn = false;
       debugPrint("App resumed from website — checking subscription status...");
-      checkAndUpdateStatus();
+      checkAndUpdateStatus(showSuccessSnackbarOnlyIfNewlyActivated: true);
     }
   }
 
   /// Initiates payment for a SubscriptionPlan.
-  /// Direct flow: Opens the website subscription/payment page directly on https://mastiadda.com without calling createOrder API.
+  /// Direct flow: Opens the website subscription/payment page directly on https://mastiadda.in without calling createOrder API.
   Future<void> startPayment({
     required SubscriptionPlan plan,
     String? promoCode,
@@ -34,6 +37,8 @@ class PaymentController extends GetxController with WidgetsBindingObserver {
     String? userName,
   }) async {
     isProcessing.value = true;
+    _wasPremiumBeforeRedirect = _subController.isPremiumUser.value;
+    _expectingPaymentReturn = true;
 
     try {
       final token = await StorageService.getToken();
@@ -43,13 +48,15 @@ class PaymentController extends GetxController with WidgetsBindingObserver {
         if (promoCode != null && promoCode.isNotEmpty) 'promoCode': promoCode,
         'source': 'app',
       };
-      final uri = Uri.parse(AppUrl.webSubscription).replace(queryParameters: queryParams);
+      final uri = Uri.parse(
+        AppUrl.webSubscription,
+      ).replace(queryParameters: queryParams);
       debugPrint("🚀 Redirecting to Web URL => $uri");
 
       isProcessing.value = false;
       Get.snackbar(
         'Redirecting to Website',
-        'Opening payment page on mastiadda.com...',
+        'Opening payment page on mastiadda.in...',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.blue.withValues(alpha: 0.8),
         colorText: Colors.white,
@@ -88,23 +95,28 @@ class PaymentController extends GetxController with WidgetsBindingObserver {
 
   SubscriptionStatusController get _subController =>
       Get.isRegistered<SubscriptionStatusController>()
-          ? Get.find<SubscriptionStatusController>()
-          : Get.put(SubscriptionStatusController(), permanent: true);
+      ? Get.find<SubscriptionStatusController>()
+      : Get.put(SubscriptionStatusController(), permanent: true);
 
   /// Manually verifies and checks subscription status upon returning from website
-  Future<void> checkAndUpdateStatus() async {
+  Future<void> checkAndUpdateStatus({
+    bool showSuccessSnackbarOnlyIfNewlyActivated = false,
+  }) async {
     try {
       await _subController.checkStatus(verify: true);
       final isSubscribed = _subController.isPremiumUser.value;
-      if (isSubscribed) {
-        _subController.markAsPremium();
-        Get.snackbar(
-          'Subscription Active',
-          'Your VIP subscription is successfully active!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.withValues(alpha: 0.8),
-          colorText: Colors.white,
-        );
+
+      // Only show success notification if user has newly gained active subscription
+      if (showSuccessSnackbarOnlyIfNewlyActivated) {
+        if (!_wasPremiumBeforeRedirect && isSubscribed) {
+          Get.snackbar(
+            'Subscription Active',
+            'Your VIP subscription is successfully active!',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.green.withValues(alpha: 0.8),
+            colorText: Colors.white,
+          );
+        }
       }
     } catch (e) {
       debugPrint("Check status error: $e");

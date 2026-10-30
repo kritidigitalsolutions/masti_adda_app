@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:masti_adda_app/constants/app_url.dart';
 import 'package:masti_adda_app/core/data/network/network_api_service.dart';
 import 'package:masti_adda_app/features/profile/models/response/DocumentModel.dart';
@@ -11,11 +13,20 @@ class ProfileDatasource {
   Future<SubscriptionStatusResponse?> fetchSubscriptionStatus() async {
     try {
       final jsonData = await _apiService.getApi(AppUrl.subscriptionStatus);
+      debugPrint('====================================================');
+      debugPrint('📦 [SUBSCRIPTION STATUS API RESPONSE]:');
+      try {
+        debugPrint(const JsonEncoder.withIndent('  ').convert(jsonData));
+      } catch (_) {
+        debugPrint('$jsonData');
+      }
+      debugPrint('====================================================');
       if (jsonData != null) {
         return SubscriptionStatusResponse.fromJson(jsonData);
       }
       return null;
     } catch (e) {
+      debugPrint('❌ [SUBSCRIPTION STATUS API ERROR]: $e');
       return null;
     }
   }
@@ -61,11 +72,20 @@ class ProfileDatasource {
   Future<SubscriptionPlansResponse?> allSubscriptionPlans() async {
     try {
       final jsonData = await _apiService.getApi(AppUrl.plan);
+      debugPrint('====================================================');
+      debugPrint('📋 [ALL SUBSCRIPTION PLANS API RESPONSE]:');
+      try {
+        debugPrint(const JsonEncoder.withIndent('  ').convert(jsonData));
+      } catch (_) {
+        debugPrint('$jsonData');
+      }
+      debugPrint('====================================================');
       if (jsonData != null) {
         return SubscriptionPlansResponse.fromJson(jsonData);
       }
       return null;
     } catch (e) {
+      debugPrint('❌ [ALL SUBSCRIPTION PLANS API ERROR]: $e');
       return null;
     }
   }

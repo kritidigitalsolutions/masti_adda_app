@@ -10,6 +10,7 @@ import 'package:masti_adda_app/features/auth/models/response/user_model.dart';
 import 'package:masti_adda_app/features/auth/repositories/auth_datasource.dart';
 import 'package:masti_adda_app/features/profile/controllers/help_controller.dart';
 import 'package:masti_adda_app/features/profile/controllers/notification_settings_controller.dart';
+import 'package:masti_adda_app/features/profile/controllers/subscription_status_controller.dart';
 import 'package:masti_adda_app/routes/app_routes.dart';
 import 'package:masti_adda_app/utils/text_style.dart';
 
@@ -119,6 +120,11 @@ class ProfileController extends GetxController {
                     child: GestureDetector(
                       onTap: () async {
                         await StorageService.logout();
+                        if (Get.isRegistered<SubscriptionStatusController>()) {
+                          final subCtrl = Get.find<SubscriptionStatusController>();
+                          subCtrl.isPremiumUser.value = false;
+                          subCtrl.subscriptionStatus.value = null;
+                        }
                         if (Get.isRegistered<AiReelsController>()) {
                           Get.find<AiReelsController>().resetState();
                           Get.delete<AiReelsController>(force: true);
@@ -188,6 +194,9 @@ class ProfileController extends GetxController {
 
       if (result != null) {
         user.value = result;
+        if (Get.isRegistered<SubscriptionStatusController>()) {
+          Get.find<SubscriptionStatusController>().checkStatus();
+        }
       } else if (user.value == null) {
         error.value = "Unable to fetch profile.";
       }

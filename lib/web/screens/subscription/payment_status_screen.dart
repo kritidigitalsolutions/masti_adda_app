@@ -82,25 +82,38 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
           pending?['paymentId'] ??
           (kIsWeb ? WebPaymentHelper.getLocalStorageItem('pending_payment_id') : null);
 
+      // Clear pending storage immediately so refresh doesn't loop
+      await StorageService.clearPendingPayment();
+      if (kIsWeb) {
+        try {
+          WebPaymentHelper.removeLocalStorageItem('pending_txn_id');
+          WebPaymentHelper.removeLocalStorageItem('pending_plan_id');
+          WebPaymentHelper.removeLocalStorageItem('pending_payment_id');
+        } catch (_) {}
+      }
+
+      if (txnId == null || txnId.trim().isEmpty) {
+        setState(() {
+          _isVerifying = false;
+          _isSuccess = false;
+          _message = 'No transaction found to verify.';
+        });
+        return;
+      }
+
       debugPrint("PaymentStatusScreen verifying: txnId=$txnId, planId=$planId, params=$queryParams");
 
       final verifyRes = await _repo.verifyPayment(
-        transactionId: txnId ?? '',
+        transactionId: txnId.trim(),
         planId: planId,
         paymentId: paymentId,
         extraData: queryParams,
       );
 
-      if (verifyRes != null && verifyRes.success) {
-        await StorageService.clearPendingPayment();
-        if (kIsWeb) {
-          try {
-            WebPaymentHelper.removeLocalStorageItem('pending_txn_id');
-            WebPaymentHelper.removeLocalStorageItem('pending_plan_id');
-            WebPaymentHelper.removeLocalStorageItem('pending_payment_id');
-          } catch (_) {}
-        }
-        await _subController.checkStatus();
+      await _subController.checkStatus();
+      final isPremium = _subController.isPremiumUser.value;
+
+      if (verifyRes != null && verifyRes.success && isPremium) {
         if (mounted) {
           setState(() {
             _isVerifying = false;
@@ -113,25 +126,14 @@ class _PaymentStatusScreenState extends State<PaymentStatusScreen> {
         return;
       }
 
-      // Check subscription status as fallback
-      await _subController.checkStatus();
-      final isPremium = _subController.isPremiumUser.value;
-
       if (mounted) {
-        if (isPremium) {
-          await StorageService.clearPendingPayment();
-          setState(() {
-            _isVerifying = false;
-            _isSuccess = true;
-            _message = 'Your VIP subscription is active!';
-          });
-        } else {
-          setState(() {
-            _isVerifying = false;
-            _isSuccess = false;
-            _message = 'Payment verification pending. If you completed payment, please try again in a few moments.';
-          });
-        }
+        setState(() {
+          _isVerifying = false;
+          _isSuccess = false;
+          _message = verifyRes?.message.isNotEmpty == true
+              ? verifyRes!.message
+              : 'Payment verification failed or pending. If you completed payment, please check your profile.';
+        });
       }
     } catch (e) {
       debugPrint("PaymentStatusScreen verify error: $e");

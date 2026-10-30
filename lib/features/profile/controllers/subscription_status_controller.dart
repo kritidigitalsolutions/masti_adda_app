@@ -10,7 +10,8 @@ class SubscriptionStatusController extends GetxController {
   final PaymentRepo _paymentRepo = PaymentRepo();
 
   final RxBool isLoading = false.obs;
-  final Rxn<SubscriptionStatusResponse> subscriptionStatus = Rxn<SubscriptionStatusResponse>();
+  final Rxn<SubscriptionStatusResponse> subscriptionStatus =
+      Rxn<SubscriptionStatusResponse>();
   final RxBool isPremiumUser = false.obs;
 
   @override
@@ -33,15 +34,21 @@ class SubscriptionStatusController extends GetxController {
         if (pending != null) {
           final txnId = pending['txnId'];
           final planId = pending['planId'];
-          if (txnId != null && txnId.isNotEmpty && planId != null && planId.isNotEmpty) {
-            debugPrint("Verifying pending payment: txnId=$txnId, planId=$planId");
+          if (txnId != null &&
+              txnId.isNotEmpty &&
+              planId != null &&
+              planId.isNotEmpty) {
+            debugPrint(
+              "Verifying pending payment: txnId=$txnId, planId=$planId",
+            );
             final verifyRes = await _paymentRepo.verifyPayment(
               transactionId: txnId,
               planId: planId,
             );
             if (verifyRes != null && verifyRes.success) {
               await StorageService.clearPendingPayment();
-              isPremiumUser.value = true; // Force active immediately on successful verification
+              isPremiumUser.value =
+                  true; // Force active immediately on successful verification
             }
           }
         }
@@ -51,20 +58,22 @@ class SubscriptionStatusController extends GetxController {
       if (result != null) {
         subscriptionStatus.value = result;
         // A user is premium if the API returns success and the active subscription exists and is active.
-        final serverIsActive = result.success &&
+        final serverIsActive =
+            result.success &&
             result.subscription != null &&
             result.subscription!.status.toLowerCase() == 'active';
-        
+
         if (serverIsActive) {
           isPremiumUser.value = true;
           await StorageService.clearPendingPayment();
-        } else if (!isPremiumUser.value) {
+        } else {
           isPremiumUser.value = false;
         }
+        debugPrint(
+          "👑 [SUBSCRIPTION CONTROLLER RESULT]: isPremiumUser = ${isPremiumUser.value}, status = ${result.subscription?.status}, remainingDays = ${result.remainingDays}",
+        );
       } else {
-        if (!isPremiumUser.value) {
-          isPremiumUser.value = false;
-        }
+        isPremiumUser.value = false;
         subscriptionStatus.value = null;
       }
     } catch (e) {
