@@ -41,8 +41,11 @@ class WebHomeController extends GetxController {
     super.onClose();
   }
 
-  Future<void> fetchAllHomeData() async {
-    await Future.wait([fetchBanners(), fetchSections()]);
+  Future<void> fetchAllHomeData({bool isSilent = false}) async {
+    await Future.wait([
+      fetchBanners(isSilent: isSilent),
+      fetchSections(isSilent: isSilent),
+    ]);
   }
 
   /// 1. Hero Banners Only: GET /api/webpage-layout/banners
@@ -65,9 +68,11 @@ class WebHomeController extends GetxController {
   }
 
   /// 2. All Carousel Rows: GET /api/webpage-layout/sections
-  Future<void> fetchSections() async {
+  Future<void> fetchSections({bool isSilent = false}) async {
     try {
-      isSectionsLoading.value = true;
+      if (!isSilent && sections.isEmpty) {
+        isSectionsLoading.value = true;
+      }
       final response = await _layoutDatasource.fetchSections();
       if (response != null && response.sections.isNotEmpty) {
         final activeSections =
@@ -80,7 +85,9 @@ class WebHomeController extends GetxController {
     } catch (e) {
       debugPrint("Web Home: fetchSections error: $e");
     } finally {
-      isSectionsLoading.value = false;
+      if (!isSilent) {
+        isSectionsLoading.value = false;
+      }
     }
   }
 

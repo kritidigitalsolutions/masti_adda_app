@@ -59,28 +59,51 @@ class _MicroDramaDetailScreenState extends State<MicroDramaDetailScreen> {
       body: Obx(() {
         // Loading state
         if (_controller.detailDramaStatus.value == Status.loading) {
-          return const MicroDramaDetailShimmer();
+          return const Stack(
+            children: [
+              MicroDramaDetailShimmer(),
+              SafeArea(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: AppBackButton(isOverlay: true),
+                ),
+              ),
+            ],
+          );
         }
 
         // Error state
         if (_controller.detailDramaStatus.value == Status.error ||
             _controller.dramaDetail.value == null) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          return SafeArea(
+            child: Stack(
               children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 16),
-                Text(
-                  'Failed to load drama details',
-                  style: text15(color: AppColors.secondaryTextColor),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: AppBackButton(),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    _controller.fetchDramaDetail(widget.id);
-                  },
-                  child: const Text('Retry'),
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Failed to load drama details',
+                        style: text15(color: AppColors.secondaryTextColor),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          _controller.fetchDramaDetail(widget.id);
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

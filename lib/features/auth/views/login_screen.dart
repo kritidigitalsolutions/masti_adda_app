@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:masti_adda_app/constants/app_colors.dart';
@@ -6,6 +9,7 @@ import 'package:masti_adda_app/features/auth/controllers/auth_controller.dart';
 import 'package:masti_adda_app/routes/app_routes.dart';
 import 'package:masti_adda_app/utils/text_style.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:masti_adda_app/shared/widgets/app_back_button.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -84,7 +88,8 @@ class LoginScreen extends StatelessWidget {
                     label: 'Continue with Mobile Number',
                     onTap: () => Get.toNamed(AppRoutes.enterMobile),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 36),
+
 
                   // Or divider
                   Row(
@@ -113,6 +118,7 @@ class LoginScreen extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   // Apple
+                  if(!Platform.isAndroid && !kIsWeb)
                   Obx(
                     () => _AppleButton(
                       isLoading: authController.isAppleLoading.value,
@@ -120,7 +126,7 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-
+                  if(!Platform.isIOS)
                   // Google
                   Obx(
                     () => _SocialButton(
@@ -131,36 +137,48 @@ class LoginScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 36),
-
                   // Already have an account
-                  RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      text: 'Already have an account?\n',
-                      style: text13(color: AppColors.secondaryTextColor),
-                      children: [
-                        WidgetSpan(
-                          child: GestureDetector(
-                            onTap: () {
-                              Get.toNamed(AppRoutes.enterMobile);
-                            },
-                            child: Text(
-                              'Log In',
-                              style: text13(
-                                color: AppColors.accentColor,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 32),
+                  // RichText(
+                  //   textAlign: TextAlign.center,
+                  //   text: TextSpan(
+                  //     text: 'Already have an account?\n',
+                  //     style: text13(color: AppColors.secondaryTextColor),
+                  //     children: [
+                  //       WidgetSpan(
+                  //         child: GestureDetector(
+                  //           onTap: () {
+                  //             Get.toNamed(AppRoutes.enterMobile);
+                  //           },
+                  //           child: Text(
+                  //             'Log In',
+                  //             style: text13(
+                  //               color: AppColors.accentColor,
+                  //               fontWeight: FontWeight.w600,
+                  //             ),
+                  //           ),
+                  //         ),
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
+                  // const SizedBox(height: 32),
                 ],
               ),
             ),
           ),
+
+          // ── Back Button (for iPhone / Navigation) ──
+          if (Navigator.canPop(context))
+            Positioned(
+              top: 0,
+              left: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 16.0, top: 12.0),
+                  child: const AppBackButton(),
+                ),
+              ),
+            ),
         ],
       ),
     );

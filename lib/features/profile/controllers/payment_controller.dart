@@ -4,6 +4,11 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:masti_adda_app/constants/app_url.dart';
 import 'package:masti_adda_app/core/services/storage_service.dart';
+import 'package:masti_adda_app/features/home/controllers/home_controller.dart';
+import 'package:masti_adda_app/features/micro_drama/controllers/micro_drama_controller.dart';
+import 'package:masti_adda_app/features/movie/controllers/movie_controller.dart';
+import 'package:masti_adda_app/features/web_series/controllers/series_controller.dart';
+import 'package:masti_adda_app/web/controllers/web_home_controller.dart';
 import 'package:masti_adda_app/features/profile/controllers/subscription_status_controller.dart';
 import 'package:masti_adda_app/features/profile/models/response/plan_model.dart';
 
@@ -105,6 +110,24 @@ class PaymentController extends GetxController with WidgetsBindingObserver {
     try {
       await _subController.checkStatus(verify: true);
       final isSubscribed = _subController.isPremiumUser.value;
+
+      // Automatically refresh Home controllers so movies, series, posters & banners are fresh
+      if (Get.isRegistered<HomeController>()) {
+        Get.find<HomeController>().fetchHomeBanners();
+        Get.find<HomeController>().fetchCategories();
+      }
+      if (Get.isRegistered<MovieController>()) {
+        Get.find<MovieController>().fetchAllMovies();
+      }
+      if (Get.isRegistered<SeriesController>()) {
+        Get.find<SeriesController>().fetchAllSeries();
+      }
+      if (Get.isRegistered<MicroDramaController>()) {
+        Get.find<MicroDramaController>().fetchAllMicroDrama();
+      }
+      if (Get.isRegistered<WebHomeController>()) {
+        Get.find<WebHomeController>().fetchAllHomeData(isSilent: true);
+      }
 
       // Only show success notification if user has newly gained active subscription
       if (showSuccessSnackbarOnlyIfNewlyActivated) {

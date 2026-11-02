@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:masti_adda_app/constants/app_colors.dart';
 import 'package:masti_adda_app/routes/app_routes.dart';
+import 'package:masti_adda_app/shared/widgets/app_back_button.dart';
 import 'package:masti_adda_app/utils/text_style.dart';
 
 class PremiumWelcomeScreen extends StatelessWidget {
@@ -13,9 +14,21 @@ class PremiumWelcomeScreen extends StatelessWidget {
       backgroundColor: AppColors.backgroundColor,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 30),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 30),
           child: Column(
             children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: AppBackButton(
+                  onPressed: () {
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    } else {
+                      Get.offAllNamed(AppRoutes.home);
+                    }
+                  },
+                ),
+              ),
               const Spacer(),
               Container(
                 width: 140,

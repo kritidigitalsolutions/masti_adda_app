@@ -1,11 +1,9 @@
 class AppUrl {
-  //   static const String baseUrl = 'http://192.168.1.2:5000';
+  // static const String baseUrl = 'http://192.168.1.21:5000';
   static const String baseUrl = 'https://api.mastiadda.in';
   // static const String webBaseUrl = 'http://192.168.1.2:3000';
   // static const String webBaseUrl = 'http://192.168.1.2:5000';
   static const String webBaseUrl = 'https://mastiadda.in';
-  // static const String webBaseUrl = 'https://sage-praline-c605a4.netlify.app';
-  // static const String baseUrl = 'https://goli-doli-ott-backend.vercel.app';
   static const String sendOtp = '$baseUrl/api/auth/send-otp';
   static const String verifyOtp = "$baseUrl/api/auth/verify-otp";
   static const String googleLogin = "$baseUrl/api/auth/google-login";

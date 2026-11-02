@@ -191,8 +191,19 @@ class _MicroDramaPlayerScreenState extends State<MicroDramaPlayerScreen> {
       backgroundColor: AppColors.black,
       body: Obx(() {
         if (_controller.episodeDetailStatus.value == Status.loading) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.accentColor),
+          return const SafeArea(
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 8,
+                  left: 16,
+                  child: AppBackButton(isOverlay: true),
+                ),
+                Center(
+                  child: CircularProgressIndicator(color: AppColors.accentColor),
+                ),
+              ],
+            ),
           );
         }
 
@@ -229,22 +240,33 @@ class _MicroDramaPlayerScreenState extends State<MicroDramaPlayerScreen> {
             return _buildEpisodeList(offline);
           }
 
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          return SafeArea(
+            child: Stack(
               children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 16),
-                Text(
-                  'Failed to load episodes',
-                  style: text15(color: AppColors.white),
+                const Positioned(
+                  top: 8,
+                  left: 16,
+                  child: AppBackButton(isOverlay: true),
                 ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    _controller.fetchEpisodeDetail(widget.dramaId);
-                  },
-                  child: const Text('Retry'),
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Failed to load episodes',
+                        style: text15(color: AppColors.white),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          _controller.fetchEpisodeDetail(widget.dramaId);
+                        },
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -253,10 +275,21 @@ class _MicroDramaPlayerScreenState extends State<MicroDramaPlayerScreen> {
 
         final episodes = _controller.episodeDetail.value!.episodes;
         if (episodes.isEmpty) {
-          return const Center(
-            child: Text(
-              'No episodes available',
-              style: TextStyle(color: AppColors.white),
+          return const SafeArea(
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 8,
+                  left: 16,
+                  child: AppBackButton(isOverlay: true),
+                ),
+                Center(
+                  child: Text(
+                    'No episodes available',
+                    style: TextStyle(color: AppColors.white),
+                  ),
+                ),
+              ],
             ),
           );
         }

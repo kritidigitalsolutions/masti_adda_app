@@ -22,7 +22,17 @@ class AudioDetailScreen extends StatelessWidget {
       bottomNavigationBar: const AudioMiniPlayer(withSystemPadding: true),
       body: Obx(() {
         if (controller.isLoading.value && controller.story.value == null) {
-          return const AudioDetailShimmer();
+          return const Stack(
+            children: [
+              AudioDetailShimmer(),
+              SafeArea(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: AppBackButton(isOverlay: true),
+                ),
+              ),
+            ],
+          );
         }
 
         final story = controller.story.value;

@@ -11,6 +11,7 @@ class WebContentCard extends StatefulWidget {
   final String id;
   final String title;
   final String? posterUrl;
+  final String? bannerUrl;
   final String? category;
   final String? type; // 'drama', 'movie', 'series'
   final double? rating;
@@ -26,6 +27,7 @@ class WebContentCard extends StatefulWidget {
     required this.id,
     required this.title,
     this.posterUrl,
+    this.bannerUrl,
     this.category,
     this.type = 'movie',
     this.rating,
@@ -64,9 +66,18 @@ class _WebContentCardState extends State<WebContentCard> {
   @override
   Widget build(BuildContext context) {
     final isMobile = WebResponsive.isMobile(context);
-    final formattedPoster = formatMediaUrl(widget.posterUrl);
-    final effectiveWidth = (isMobile && widget.width == 190) ? 140.0 : widget.width;
-    final effectiveHeight = (isMobile && widget.height == 280) ? 210.0 : widget.height;
+    final String poster = widget.posterUrl?.trim() ?? '';
+    final String banner = widget.bannerUrl?.trim() ?? '';
+    final String primaryRaw = poster.isNotEmpty ? poster : banner;
+    final String fallbackRaw =
+        banner.isNotEmpty && banner != primaryRaw ? banner : '';
+    final formattedPoster = formatMediaUrl(primaryRaw);
+    final formattedFallback = formatMediaUrl(fallbackRaw);
+
+    final effectiveWidth =
+        (isMobile && widget.width == 190) ? 140.0 : widget.width;
+    final effectiveHeight =
+        (isMobile && widget.height == 280) ? 210.0 : widget.height;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -106,46 +117,49 @@ class _WebContentCardState extends State<WebContentCard> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // 1. Poster Image (BoxFit.contain to ensure full poster is shown without cuts)
+                // 1. Poster Image (Uses native Web Image.network to avoid CanvasKit WebGL black texture bug)
                 if (formattedPoster.isNotEmpty)
                   Container(
                     color: AppColors.surfaceColor,
-                    child: CachedNetworkImage(
-                      imageUrl: formattedPoster,
-                      fit: BoxFit.contain,
+                    child: Image.network(
+                      formattedPoster,
+                      fit: BoxFit.cover,
                       alignment: Alignment.center,
-                      placeholder: (context, url) => Container(
-                        color: AppColors.surfaceColor,
-                        child: const Center(
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primaryPink,
+                      frameBuilder: (
+                        context,
+                        child,
+                        frame,
+                        wasSynchronouslyLoaded,
+                      ) {
+                        if (wasSynchronouslyLoaded || frame != null) {
+                          return child;
+                        }
+                        return Container(
+                          color: AppColors.surfaceColor,
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primaryPink,
+                            ),
                           ),
-                        ),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        color: AppColors.surfaceColor,
-                        child: const Center(
-                          child: Icon(
-                            Icons.movie_creation_outlined,
-                            color: AppColors.secondaryTextColor,
-                            size: 40,
-                          ),
-                        ),
-                      ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        if (formattedFallback.isNotEmpty &&
+                            formattedFallback != formattedPoster) {
+                          return Image.network(
+                            formattedFallback,
+                            fit: BoxFit.cover,
+                            alignment: Alignment.center,
+                            errorBuilder: (_, _, _) => _buildPlaceholder(),
+                          );
+                        }
+                        return _buildPlaceholder();
+                      },
                     ),
                   )
                 else
-                  Container(
-                    color: AppColors.surfaceColor,
-                    child: const Center(
-                      child: Icon(
-                        Icons.movie_creation_outlined,
-                        color: AppColors.secondaryTextColor,
-                        size: 40,
-                      ),
-                    ),
-                  ),
+                  _buildPlaceholder(),
 
                 // 2. Gradient Overlay for readability
                 Positioned.fill(
@@ -326,6 +340,19 @@ class _WebContentCardState extends State<WebContentCard> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return Container(
+      color: AppColors.surfaceColor,
+      child: const Center(
+        child: Icon(
+          Icons.movie_creation_outlined,
+          color: AppColors.secondaryTextColor,
+          size: 40,
         ),
       ),
     );

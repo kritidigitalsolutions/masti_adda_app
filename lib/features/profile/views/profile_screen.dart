@@ -6,6 +6,7 @@ import 'package:masti_adda_app/features/profile/controllers/help_controller.dart
 import 'package:masti_adda_app/features/profile/controllers/profile_controller.dart';
 import 'package:masti_adda_app/features/profile/controllers/subscription_status_controller.dart';
 import 'package:masti_adda_app/routes/app_routes.dart';
+import 'package:masti_adda_app/shared/widgets/app_back_button.dart';
 import 'package:masti_adda_app/shared/widgets/custom_button.dart';
 import 'package:masti_adda_app/shared/widgets/shimmer/shimmer.dart';
 import 'package:masti_adda_app/utils/date_utils.dart';
@@ -29,7 +30,7 @@ class ProfileScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _buildAppBar(),
+            _buildAppBar(context),
             Expanded(
               child: RefreshIndicator(
                 onRefresh: () async {
@@ -65,11 +66,18 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildAppBar(BuildContext context) {
+    final canPop = Navigator.canPop(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
-        children: [Text('Profile', style: text16(fontWeight: FontWeight.w600))],
+        children: [
+          if (canPop) ...[
+            const AppBackButton(),
+            const SizedBox(width: 12),
+          ],
+          Text('Profile', style: text16(fontWeight: FontWeight.w600)),
+        ],
       ),
     );
   }

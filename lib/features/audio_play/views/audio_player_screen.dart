@@ -36,8 +36,19 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
         final currentEp = controller.currentEpisode;
 
         if (story == null) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.primaryColor),
+          return const SafeArea(
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 8,
+                  left: 16,
+                  child: AppBackButton(isOverlay: true),
+                ),
+                Center(
+                  child: CircularProgressIndicator(color: AppColors.primaryColor),
+                ),
+              ],
+            ),
           );
         }
 

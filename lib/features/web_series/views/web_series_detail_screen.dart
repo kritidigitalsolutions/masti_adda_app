@@ -55,36 +55,62 @@ class _WebSeriesDetailScreenState extends State<WebSeriesDetailScreen> {
 
         // Check for loading state
         if (seriesStatus == Status.loading) {
-          return const DetailScreenShimmer();
+          return const Scaffold(
+            backgroundColor: AppColors.backgroundColor,
+            body: Stack(
+              children: [
+                DetailScreenShimmer(),
+                SafeArea(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: AppBackButton(isOverlay: true),
+                  ),
+                ),
+              ],
+            ),
+          );
         }
 
         // Check for error state
         if (seriesStatus == Status.error) {
           return Scaffold(
             backgroundColor: AppColors.backgroundColor,
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            body: SafeArea(
+              child: Stack(
                 children: [
-                  const Icon(
-                    Icons.error_outline,
-                    color: AppColors.errorColor,
-                    size: 64,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Failed to load series details",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      _seriesController.fetchSeriesDetail(widget.id);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accentColor,
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: AppBackButton(),
                     ),
-                    child: const Text('Retry'),
+                  ),
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          color: AppColors.errorColor,
+                          size: 64,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          "Failed to load series details",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            _seriesController.fetchSeriesDetail(widget.id);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.accentColor,
+                          ),
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -99,10 +125,23 @@ class _WebSeriesDetailScreenState extends State<WebSeriesDetailScreen> {
         if (seriesDetail == null) {
           return const Scaffold(
             backgroundColor: AppColors.backgroundColor,
-            body: Center(
-              child: Text(
-                "No data available",
-                style: TextStyle(color: Colors.white),
+            body: SafeArea(
+              child: Stack(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: AppBackButton(),
+                    ),
+                  ),
+                  Center(
+                    child: Text(
+                      "No data available",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
             ),
           );

@@ -50,7 +50,17 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
       if (_controller.movieDetailStatus.value == Status.loading) {
         return const Scaffold(
           backgroundColor: AppColors.backgroundColor,
-          body: DetailScreenShimmer(),
+          body: Stack(
+            children: [
+              DetailScreenShimmer(),
+              SafeArea(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: AppBackButton(isOverlay: true),
+                ),
+              ),
+            ],
+          ),
         );
       }
 
@@ -58,32 +68,45 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
       if (_controller.movieDetailStatus.value == Status.error) {
         return Scaffold(
           backgroundColor: AppColors.backgroundColor,
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          body: SafeArea(
+            child: Stack(
               children: [
-                Icon(
-                  Icons.error_outline_rounded,
-                  color: AppColors.errorColor,
-                  size: 48,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Failed to load movie details',
-                  style: text14(color: AppColors.secondaryTextColor),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    if (widget.id != null) {
-                      _controller.fetchMovieDetail(widget.id!);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accentColor,
-                    foregroundColor: AppColors.black,
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: AppBackButton(),
                   ),
-                  child: const Text('Retry'),
+                ),
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline_rounded,
+                        color: AppColors.errorColor,
+                        size: 48,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Failed to load movie details',
+                        style: text14(color: AppColors.secondaryTextColor),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (widget.id != null) {
+                            _controller.fetchMovieDetail(widget.id!);
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accentColor,
+                          foregroundColor: AppColors.black,
+                        ),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -93,9 +116,22 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
 
       final movie = _controller.movieDetail.value;
       if (movie == null) {
-        return Scaffold(
+        return const Scaffold(
           backgroundColor: AppColors.backgroundColor,
-          body: const Center(child: Text('No movie found')),
+          body: SafeArea(
+            child: Stack(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: AppBackButton(),
+                  ),
+                ),
+                Center(child: Text('No movie found')),
+              ],
+            ),
+          ),
         );
       }
 

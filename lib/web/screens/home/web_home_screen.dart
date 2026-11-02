@@ -9,12 +9,31 @@ import 'package:masti_adda_app/web/widgets/web_content_card.dart';
 import 'package:masti_adda_app/web/widgets/web_content_section.dart';
 import 'package:masti_adda_app/web/widgets/web_hero_carousel.dart';
 
-class WebHomeScreen extends StatelessWidget {
+class WebHomeScreen extends StatefulWidget {
   const WebHomeScreen({super.key});
 
   @override
+  State<WebHomeScreen> createState() => _WebHomeScreenState();
+}
+
+class _WebHomeScreenState extends State<WebHomeScreen> {
+  late final WebHomeController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.isRegistered<WebHomeController>()
+        ? Get.find<WebHomeController>()
+        : Get.put(WebHomeController(), permanent: true);
+
+    // Refresh home data silently upon entering to guarantee fresh image URLs and VIP status
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controller.fetchAllHomeData(isSilent: _controller.sections.isNotEmpty);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final controller = Get.put(WebHomeController(), permanent: true);
     final horizontalPadding = WebResponsive.contentHorizontalPadding(context);
 
     return WebMainLayout(
@@ -25,8 +44,8 @@ class WebHomeScreen extends StatelessWidget {
           children: [
             // 1. Hero Spotlight Carousel (GET /api/webpage-layout/banners)
             WebHeroCarousel(
-              banners: controller.banners,
-              isLoading: controller.isBannersLoading.value,
+              banners: _controller.banners,
+              isLoading: _controller.isBannersLoading.value,
             ),
 
             const SizedBox(height: 10),
@@ -37,8 +56,8 @@ class WebHomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (controller.isSectionsLoading.value &&
-                      controller.sections.isEmpty)
+                  if (_controller.isSectionsLoading.value &&
+                      _controller.sections.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 40),
                       child: Center(
@@ -48,7 +67,7 @@ class WebHomeScreen extends StatelessWidget {
                       ),
                     ),
 
-                  ...controller.sections.map((section) {
+                  ..._controller.sections.map((section) {
                     if (section.items.isEmpty) return const SizedBox.shrink();
 
                     return WebContentSection(
@@ -58,9 +77,8 @@ class WebHomeScreen extends StatelessWidget {
                         return WebContentCard(
                           id: item.id,
                           title: item.title,
-                          posterUrl: item.poster.isNotEmpty
-                              ? item.poster
-                              : item.banner,
+                          posterUrl: item.poster,
+                          bannerUrl: item.banner,
                           type: item.type,
                           category: item.category ?? section.title,
                           rating: item.rating,

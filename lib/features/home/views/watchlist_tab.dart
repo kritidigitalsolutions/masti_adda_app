@@ -7,6 +7,7 @@ import 'package:masti_adda_app/features/movie/views/movie_details_screen.dart';
 import 'package:masti_adda_app/features/profile/controllers/watchlist_controller.dart';
 import 'package:masti_adda_app/features/profile/models/response/watchlist_model.dart';
 import 'package:masti_adda_app/features/web_series/views/web_series_detail_screen.dart';
+import 'package:masti_adda_app/shared/widgets/app_back_button.dart';
 import 'package:masti_adda_app/shared/widgets/shimmer/shimmer.dart';
 import 'package:masti_adda_app/utils/helpers.dart';
 import 'package:masti_adda_app/utils/text_style.dart';
@@ -26,7 +27,7 @@ class WatchlistScreen extends StatelessWidget {
           backgroundColor: AppColors.surfaceColor,
           child: Column(
             children: [
-              _buildAppBar(),
+              _buildAppBar(context),
               _buildTabs(controller),
               Expanded(child: _buildContent(controller)),
             ],
@@ -37,11 +38,16 @@ class WatchlistScreen extends StatelessWidget {
   }
 
   // ── Top bar ────────────────────────────────────────────────────────────────
-  Widget _buildAppBar() {
+  Widget _buildAppBar(BuildContext context) {
+    final canPop = Navigator.canPop(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
       child: Row(
         children: [
+          if (canPop) ...[
+            const AppBackButton(),
+            const SizedBox(width: 12),
+          ],
           Text(
             'Watchlist',
             style: text18(
