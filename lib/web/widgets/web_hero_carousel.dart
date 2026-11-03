@@ -56,6 +56,28 @@ class _WebHeroCarouselState extends State<WebHeroCarousel> {
     }
   }
 
+  void _onWatchTrailer(HomeBannerItem banner) {
+    final trailer = banner.content?.trailerUrl;
+    if (trailer == null || trailer.trim().isEmpty) return;
+
+    final targetId = banner.content?.id ?? banner.id;
+    final targetType = (banner.contentType ?? 'movie').toLowerCase();
+    final title = banner.content?.title ?? banner.title ?? 'Content';
+
+    Get.toNamed(
+      WebRoutes.player,
+      arguments: {
+        'contentId': targetId,
+        'title': '$title (Trailer)',
+        'dramaTitle': '$title (Trailer)',
+        'poster': banner.content?.poster ?? banner.banner ?? '',
+        'videoUrl': trailer.trim(),
+        'type': targetType,
+        'isPremium': false,
+      },
+    );
+  }
+
   DateTime? _lastKeyEventTime;
   LogicalKeyboardKey? _lastKeyEventKey;
 
@@ -90,9 +112,7 @@ class _WebHeroCarouselState extends State<WebHeroCarousel> {
   Widget build(BuildContext context) {
     final isMobile = WebResponsive.isMobile(context);
     final isTablet = WebResponsive.isTablet(context);
-    final double bannerHeight = isMobile
-        ? 340.0
-        : (isTablet ? 460.0 : 560.0);
+    final double bannerHeight = isMobile ? 340.0 : (isTablet ? 460.0 : 560.0);
 
     if (widget.isLoading) {
       return WebShimmerBanner(height: bannerHeight);
@@ -292,6 +312,42 @@ class _WebHeroCarouselState extends State<WebHeroCarousel> {
                                 ),
                               ),
 
+                              // Watch Trailer Button (if available)
+                              if (banner.content?.trailerUrl != null &&
+                                  banner.content!.trailerUrl!.trim().isNotEmpty)
+                                OutlinedButton.icon(
+                                  onPressed: () => _onWatchTrailer(banner),
+                                  icon: const Icon(
+                                    Icons.movie_creation_outlined,
+                                    size: 20,
+                                    color: Colors.white,
+                                  ),
+                                  label: const Text(
+                                    'Trailer',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    backgroundColor: Colors.white.withOpacity(
+                                      0.12,
+                                    ),
+                                    side: BorderSide(
+                                      color: Colors.white.withOpacity(0.35),
+                                      width: 1,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                ),
+
                               // Details Button
                               OutlinedButton.icon(
                                 onPressed: () => _onWatchNow(banner),
@@ -490,11 +546,7 @@ class _HeroBannerImageState extends State<_HeroBannerImage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1B1E29),
-            Color(0xFF13151D),
-            Color(0xFF0E0F15),
-          ],
+          colors: [Color(0xFF1B1E29), Color(0xFF13151D), Color(0xFF0E0F15)],
         ),
       ),
       child: Center(

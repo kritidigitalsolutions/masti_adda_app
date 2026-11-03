@@ -17,4 +17,5 @@ class WebPaymentHelper {
 
   static String? getLocalStorageItem(String key) => null;
   static void removeLocalStorageItem(String key) {}
+  static void cleanUrlQueryParams() {}
 }

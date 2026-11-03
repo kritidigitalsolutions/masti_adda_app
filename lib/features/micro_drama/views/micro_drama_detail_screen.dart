@@ -10,6 +10,7 @@ import 'package:masti_adda_app/features/micro_drama/controllers/micro_drama_cont
 import 'package:masti_adda_app/features/micro_drama/models/episode_detail_response.dart';
 import 'package:masti_adda_app/features/micro_drama/models/micro_drama_detail_response.dart';
 import 'package:masti_adda_app/features/micro_drama/views/micro_drama_player_screen.dart';
+import 'package:masti_adda_app/features/movie/views/movie_player_screen.dart';
 import 'package:masti_adda_app/utils/helpers.dart';
 import 'package:masti_adda_app/utils/text_style.dart';
 import 'package:masti_adda_app/features/profile/controllers/watchlist_controller.dart';
@@ -361,46 +362,102 @@ class _MicroDramaDetailScreenState extends State<MicroDramaDetailScreen> {
   // ── Actions ────────────────────────────────────────────────────────────────
   Widget _buildActions(Microdrama drama) {
     final dramaId = drama.id.isNotEmpty ? drama.id : widget.id;
+    final hasTrailer = drama.trailerUrl.trim().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Column(
         children: [
-          // Primary "Start Watching" Button
-          GestureDetector(
-            onTap: _onStartWatching,
-            child: Container(
-              height: 48,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.accentColor,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.accentColor.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.play_arrow_rounded,
-                    color: AppColors.white,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Start Watching',
-                    style: text15(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.bold,
+          Row(
+            children: [
+              // Primary "Start Watching" Button
+              Expanded(
+                flex: hasTrailer ? 3 : 1,
+                child: GestureDetector(
+                  onTap: _onStartWatching,
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.accentColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.accentColor.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.play_arrow_rounded,
+                          color: AppColors.white,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Start Watching',
+                          style: text15(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+              if (hasTrailer) ...[
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => MoviePlayerScreen(
+                            videoUrl: drama.trailerUrl.trim(),
+                            title: '${drama.title} - Trailer',
+                            contentId: dramaId,
+                            contentType: 'microdrama',
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.25),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.movie_creation_outlined,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Trailer',
+                            style: text15(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 18),
           // Modern Quick Actions Row (Watchlist, Like, Dislike, Share)

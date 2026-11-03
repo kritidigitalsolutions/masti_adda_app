@@ -85,6 +85,7 @@ class HomeBannerContent {
   final String? rating;
   final String? duration;
   final String? videoUrl;
+  final String? trailerUrl;
   final String? type;
   final String? modelName;
 
@@ -99,6 +100,7 @@ class HomeBannerContent {
     this.rating,
     this.duration,
     this.videoUrl,
+    this.trailerUrl,
     this.type,
     this.modelName,
   });
@@ -115,6 +117,7 @@ class HomeBannerContent {
       rating: json['rating']?.toString(),
       duration: json['duration'],
       videoUrl: json['videoUrl'],
+      trailerUrl: json['trailerUrl']?.toString() ?? json['trailer']?.toString(),
       type: json['type'],
       modelName: json['modelName'],
     );
@@ -132,6 +135,7 @@ class HomeBannerContent {
       'rating': rating,
       'duration': duration,
       'videoUrl': videoUrl,
+      'trailerUrl': trailerUrl,
       'type': type,
       'modelName': modelName,
     };

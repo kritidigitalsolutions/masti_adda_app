@@ -246,6 +246,45 @@ class _WebDetailsScreenState extends State<WebDetailsScreen> {
     );
   }
 
+  String? get _trailerUrl {
+    if (_type.contains('drama') && _drama != null) {
+      return _drama!.trailerUrl;
+    } else if (_type.contains('series') && _series != null) {
+      return _series!.trailerUrl;
+    } else if (_movie != null) {
+      return _movie!.trailerUrl;
+    }
+    return null;
+  }
+
+  void _onPlayTrailer() {
+    final trailer = _trailerUrl;
+    if (trailer == null || trailer.trim().isEmpty) return;
+
+    final contentTitle =
+        _movie?.title ?? _series?.title ?? _drama?.title ?? 'Content';
+    final fullTitle = '$contentTitle (Trailer)';
+
+    Get.toNamed(
+      WebRoutes.player,
+      arguments: {
+        'contentId': _id,
+        'title': fullTitle,
+        'dramaTitle': fullTitle,
+        'poster': _drama?.poster.isNotEmpty == true
+            ? _drama!.poster
+            : (_drama?.banner.isNotEmpty == true
+                ? _drama!.banner
+                : (_series?.poster.isNotEmpty == true
+                    ? _series!.poster
+                    : (_movie?.poster ?? ''))),
+        'videoUrl': trailer.trim(),
+        'type': _type,
+        'isPremium': false,
+      },
+    );
+  }
+
   Widget _buildDetailsMeta({
     required bool isMobile,
     required bool isTablet,
@@ -382,31 +421,69 @@ class _WebDetailsScreenState extends State<WebDetailsScreen> {
           ),
         const SizedBox(height: 18),
 
-        // Watch Now Button
-        ElevatedButton.icon(
-          onPressed: () => _onPlayClicked(),
-          icon: const Icon(Icons.play_arrow_rounded,
-              size: 26, color: Colors.white),
-          label: const Text(
-            'Watch Now',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
+        // Action Buttons Row (Watch Now + Watch Trailer if available)
+        Wrap(
+          spacing: 12,
+          runSpacing: 10,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            ElevatedButton.icon(
+              onPressed: () => _onPlayClicked(),
+              icon: const Icon(
+                Icons.play_arrow_rounded,
+                size: 26,
+                color: Colors.white,
+              ),
+              label: const Text(
+                'Watch Now',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryPink,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 22 : 28,
+                  vertical: isMobile ? 12 : 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 8,
+                shadowColor: AppColors.primaryPink.withOpacity(0.5),
+              ),
             ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryPink,
-            padding: EdgeInsets.symmetric(
-              horizontal: isMobile ? 24 : 32,
-              vertical: isMobile ? 12 : 16,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            elevation: 8,
-            shadowColor: AppColors.primaryPink.withOpacity(0.5),
-          ),
+            if (_trailerUrl != null && _trailerUrl!.trim().isNotEmpty)
+              OutlinedButton.icon(
+                onPressed: _onPlayTrailer,
+                icon: const Icon(
+                  Icons.movie_creation_outlined,
+                  size: 20,
+                  color: Colors.white,
+                ),
+                label: const Text(
+                  'Watch Trailer',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.white, width: 1.5),
+                  backgroundColor: Colors.white.withOpacity(0.12),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 18 : 24,
+                    vertical: isMobile ? 12 : 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+          ],
         ),
       ],
     );

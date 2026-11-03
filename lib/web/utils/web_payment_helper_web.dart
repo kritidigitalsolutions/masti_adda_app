@@ -24,6 +24,12 @@ class WebPaymentHelper {
     } catch (_) {}
   }
 
+  static void cleanUrlQueryParams() {
+    try {
+      web.window.history.replaceState(null, '', web.window.location.pathname);
+    } catch (_) {}
+  }
+
   /// Navigates to SabPaisa payment gateway for a given subscription plan on Web in the same tab by default
   static Future<WebPaymentResult> purchasePlan({
     required SubscriptionPlan plan,

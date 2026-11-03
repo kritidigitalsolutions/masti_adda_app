@@ -203,6 +203,7 @@ class WebLayoutItem {
   final String? duration;
   final int? releaseYear;
   final String? category;
+  final String? trailerUrl;
   final int priority;
 
   WebLayoutItem({
@@ -216,6 +217,7 @@ class WebLayoutItem {
     this.duration,
     this.releaseYear,
     this.category,
+    this.trailerUrl,
     required this.priority,
   });
 
@@ -307,6 +309,12 @@ class WebLayoutItem {
       }
     }
 
+    final String? trailerUrl = (raw['trailerUrl'] ??
+            raw['trailer'] ??
+            json['trailerUrl'] ??
+            json['trailer'])
+        ?.toString();
+
     final int priority = (json['priority'] is num)
         ? (json['priority'] as num).toInt()
         : ((raw['priority'] is num)
@@ -326,6 +334,7 @@ class WebLayoutItem {
       duration: duration,
       releaseYear: releaseYear,
       category: category,
+      trailerUrl: trailerUrl,
       priority: priority,
     );
   }

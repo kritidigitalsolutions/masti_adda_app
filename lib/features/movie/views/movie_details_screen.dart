@@ -434,73 +434,129 @@ class _MovieDetailsScreenState extends State<MovieDetailsScreen> {
   }
 
   Widget _buildActions(MovieModel movie) {
+    final hasTrailer = movie.trailerUrl.trim().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         children: [
-          // Primary "Watch Now" Button
-          GestureDetector(
-            onTap: () {
-              if (movie.videoUrl.isNotEmpty) {
-                if (checkPlayable(
-                  context,
-                  isPremium: movie.isPremium,
-                  title: movie.title,
-                )) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => MoviePlayerScreen(
-                        videoUrl: movie.videoUrl,
+          Row(
+            children: [
+              // Primary "Watch Now" Button
+              Expanded(
+                flex: hasTrailer ? 3 : 1,
+                child: GestureDetector(
+                  onTap: () {
+                    if (movie.videoUrl.isNotEmpty) {
+                      if (checkPlayable(
+                        context,
+                        isPremium: movie.isPremium,
                         title: movie.title,
-                        contentId: movie.id,
-                        contentType: 'movie',
+                      )) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => MoviePlayerScreen(
+                              videoUrl: movie.videoUrl,
+                              title: movie.title,
+                              contentId: movie.id,
+                              contentType: 'movie',
+                            ),
+                          ),
+                        );
+                      }
+                    } else {
+                      Get.snackbar(
+                        'Notice',
+                        'Video is not available yet',
+                        snackPosition: SnackPosition.BOTTOM,
+                        backgroundColor: Colors.black87,
+                        colorText: Colors.white,
+                      );
+                    }
+                  },
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primaryColor.withValues(alpha: 0.25),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.play_arrow_rounded,
+                          color: AppColors.black,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Watch Now',
+                          style: text15(
+                            color: AppColors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (hasTrailer) ...[
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => MoviePlayerScreen(
+                            videoUrl: movie.trailerUrl.trim(),
+                            title: '${movie.title} - Trailer',
+                            contentId: movie.id,
+                            contentType: 'movie',
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.25),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.movie_creation_outlined,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Trailer',
+                            style: text15(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                }
-              } else {
-                Get.snackbar(
-                  'Notice',
-                  'Video is not available yet',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.black87,
-                  colorText: Colors.white,
-                );
-              }
-            },
-            child: Container(
-              height: 48,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.primaryColor,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryColor.withValues(alpha: 0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
                   ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.play_arrow_rounded,
-                    color: AppColors.black,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Watch Now',
-                    style: text15(
-                      color: AppColors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 18),
           // Modern Quick Actions Row (Watchlist, Like, Dislike, Download, Share)

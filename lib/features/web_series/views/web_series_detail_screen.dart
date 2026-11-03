@@ -420,79 +420,135 @@ class _WebSeriesDetailScreenState extends State<WebSeriesDetailScreen> {
 
   // ── Action buttons ─────────────────────────────────────────────────────────
   Widget _buildActions(Series series) {
+    final hasTrailer = series.trailerUrl.trim().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Column(
         children: [
-          // Primary "Watch Now" Button
-          GestureDetector(
-            onTap: () {
-              final episodes = _episodeController.allEpisode.value?.episodes;
-              if (episodes != null && episodes.isNotEmpty) {
-                final sorted = List<Episode>.from(episodes)
-                  ..sort((a, b) => a.episodeNumber.compareTo(b.episodeNumber));
-                final firstEp = sorted.first;
-                final isPremium = series.isPremium;
-                final title = series.title;
-                if (checkPlayable(
-                  context,
-                  isPremium: isPremium,
-                  title: title,
-                )) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => MoviePlayerScreen(
-                        episodeId: firstEp.id,
-                        title: "${series.title} - EP ${firstEp.episodeNumber}",
-                        contentId: widget.id,
-                        contentType: 'series',
+          Row(
+            children: [
+              // Primary "Watch Now" Button
+              Expanded(
+                flex: hasTrailer ? 3 : 1,
+                child: GestureDetector(
+                  onTap: () {
+                    final episodes = _episodeController.allEpisode.value?.episodes;
+                    if (episodes != null && episodes.isNotEmpty) {
+                      final sorted = List<Episode>.from(episodes)
+                        ..sort((a, b) => a.episodeNumber.compareTo(b.episodeNumber));
+                      final firstEp = sorted.first;
+                      final isPremium = series.isPremium;
+                      final title = series.title;
+                      if (checkPlayable(
+                        context,
+                        isPremium: isPremium,
+                        title: title,
+                      )) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => MoviePlayerScreen(
+                              episodeId: firstEp.id,
+                              title: "${series.title} - EP ${firstEp.episodeNumber}",
+                              contentId: widget.id,
+                              contentType: 'series',
+                            ),
+                          ),
+                        );
+                      }
+                    } else {
+                      Get.snackbar(
+                        'Notice',
+                        'No episodes available yet',
+                        snackPosition: SnackPosition.BOTTOM,
+                        backgroundColor: Colors.black87,
+                        colorText: Colors.white,
+                      );
+                    }
+                  },
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primaryColor.withValues(alpha: 0.25),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.play_arrow_rounded,
+                          color: AppColors.black,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Watch Now',
+                          style: text15(
+                            color: AppColors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (hasTrailer) ...[
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => MoviePlayerScreen(
+                            videoUrl: series.trailerUrl.trim(),
+                            title: '${series.title} - Trailer',
+                            contentId: widget.id,
+                            contentType: 'series',
+                          ),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.25),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.movie_creation_outlined,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Trailer',
+                            style: text15(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                }
-              } else {
-                Get.snackbar(
-                  'Notice',
-                  'No episodes available yet',
-                  snackPosition: SnackPosition.BOTTOM,
-                  backgroundColor: Colors.black87,
-                  colorText: Colors.white,
-                );
-              }
-            },
-            child: Container(
-              height: 48,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.primaryColor,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryColor.withValues(alpha: 0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
                   ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.play_arrow_rounded,
-                    color: AppColors.black,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Watch Now',
-                    style: text15(
-                      color: AppColors.black,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
+              ],
+            ],
           ),
           const SizedBox(height: 18),
           // Modern Quick Actions Row (Watchlist, Like, Dislike, Share)
