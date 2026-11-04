@@ -8,6 +8,8 @@ import 'package:masti_adda_app/web/layouts/web_nav_drawer.dart';
 class WebMainLayout extends StatefulWidget {
   final String activeRoute;
   final Widget body;
+  final Widget? floatingActionButton;
+  final FloatingActionButtonLocation? floatingActionButtonLocation;
   final bool showFooter;
   final bool isScrollable;
 
@@ -15,6 +17,8 @@ class WebMainLayout extends StatefulWidget {
     super.key,
     required this.activeRoute,
     required this.body,
+    this.floatingActionButton,
+    this.floatingActionButtonLocation,
     this.showFooter = true,
     this.isScrollable = true,
   });
@@ -135,6 +139,8 @@ class _WebMainLayoutState extends State<WebMainLayout> {
       child: Scaffold(
         backgroundColor: AppColors.backgroundColor,
         drawer: WebNavDrawer(activeRoute: widget.activeRoute),
+        floatingActionButton: widget.floatingActionButton,
+        floatingActionButtonLocation: widget.floatingActionButtonLocation,
         body: Column(
           children: [
             WebHeader(activeRoute: widget.activeRoute),

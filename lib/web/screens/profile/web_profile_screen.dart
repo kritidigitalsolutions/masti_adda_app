@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -17,6 +18,7 @@ import 'package:masti_adda_app/shared/widgets/shimmer/shimmer.dart';
 import 'package:masti_adda_app/utils/date_utils.dart';
 import 'package:masti_adda_app/utils/helpers.dart';
 import 'package:masti_adda_app/utils/text_style.dart';
+import 'package:masti_adda_app/web/controllers/company_info_controller.dart';
 import 'package:masti_adda_app/web/layouts/web_main_layout.dart';
 import 'package:masti_adda_app/web/routes/web_routes.dart';
 import 'package:masti_adda_app/web/screens/auth/web_login_dialog.dart';
@@ -48,6 +50,18 @@ class _WebProfileScreenState extends State<WebProfileScreen> {
     _subController = Get.isRegistered<SubscriptionStatusController>()
         ? Get.find<SubscriptionStatusController>()
         : Get.put(SubscriptionStatusController());
+
+    // Preload help and company info in background so WhatsApp support number is ready
+    if (Get.isRegistered<HelpController>()) {
+      Get.find<HelpController>().fetchAllHelp();
+    } else {
+      Get.put(HelpController()).fetchAllHelp();
+    }
+    if (Get.isRegistered<CompanyInfoController>()) {
+      Get.find<CompanyInfoController>().fetchCompanyInfo();
+    } else {
+      Get.put(CompanyInfoController()).fetchCompanyInfo();
+    }
 
     _checkLoginAndLoad();
   }
@@ -89,39 +103,29 @@ class _WebProfileScreenState extends State<WebProfileScreen> {
 
     return WebMainLayout(
       activeRoute: WebRoutes.profile,
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.symmetric(
-              horizontal: horizontalPadding,
-              vertical: 24,
-            ),
-            child: Center(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: 700),
-                child: _isCheckingAuth
-                    ? const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 80),
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.primaryPink,
-                          ),
-                        ),
-                      )
-                    : _isLoggedIn
-                    ? _buildProfileContent()
-                    : _buildLoggedOutView(),
-              ),
-            ),
+      floatingActionButton: _buildWhatsAppFloatingButton(),
+      body: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontalPadding,
+          vertical: 24,
+        ),
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 700),
+            child: _isCheckingAuth
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 80),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primaryPink,
+                      ),
+                    ),
+                  )
+                : _isLoggedIn
+                ? _buildProfileContent()
+                : _buildLoggedOutView(),
           ),
-          // WhatsApp Floating Action Button
-          Positioned(
-            right: 24,
-            bottom: 24,
-            child: _buildWhatsAppFloatingButton(),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -797,59 +801,72 @@ class _WebProfileScreenState extends State<WebProfileScreen> {
   }
 
   Widget _buildWhatsAppFloatingButton() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF25D366).withOpacity(0.45),
-            blurRadius: 16,
-            spreadRadius: 1,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _openWhatsApp,
-          borderRadius: BorderRadius.circular(30),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, right: 12),
+      child: Tooltip(
+        message: 'Chat on WhatsApp',
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF25D366), Color(0xFF1EBE5D)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  AppImages.whtsapp,
-                  height: 22,
-                  width: 22,
-                  errorBuilder: (_, __, ___) => const Icon(
-                    Icons.chat_bubble_rounded,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Support',
-                  style: text13(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF25D366).withOpacity(0.5),
+                  blurRadius: 18,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 6),
                 ),
               ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _openWhatsApp,
+                borderRadius: BorderRadius.circular(30),
+                hoverColor: Colors.white.withOpacity(0.12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF25D366), Color(0xFF128C7E)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.35),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        AppImages.whtsapp,
+                        height: 24,
+                        width: 24,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.chat_bubble_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'WhatsApp Support',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -1151,12 +1168,17 @@ class _WebProfileScreenState extends State<WebProfileScreen> {
   }
 
   Future<void> _openWhatsApp() async {
-    final helpCtrl = HelpController.to;
+    final helpCtrl = Get.isRegistered<HelpController>()
+        ? Get.find<HelpController>()
+        : Get.put(HelpController());
 
     String rawNumber = helpCtrl.supportNumber;
     if (rawNumber.isEmpty) {
       await helpCtrl.fetchAllHelp();
       rawNumber = helpCtrl.supportNumber;
+    }
+    if (rawNumber.isEmpty && Get.isRegistered<CompanyInfoController>()) {
+      rawNumber = CompanyInfoController.to.companyInfo.value.supportPhone;
     }
 
     final cleanDigits = rawNumber.replaceAll(RegExp(r'[^0-9]'), '');
@@ -1184,16 +1206,14 @@ class _WebProfileScreenState extends State<WebProfileScreen> {
     final whatsappUrl = Uri.parse('https://wa.me/$finalPhone?text=$message');
 
     try {
-      if (await canLaunchUrl(whatsappUrl)) {
-        await launchUrl(whatsappUrl, mode: LaunchMode.platformDefault);
+      if (kIsWeb) {
+        await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
       } else {
-        Get.snackbar(
-          'WhatsApp Support',
-          'Could not open WhatsApp support.',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.orange.withOpacity(0.8),
-          colorText: Colors.white,
-        );
+        if (await canLaunchUrl(whatsappUrl)) {
+          await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+        } else {
+          await launchUrl(whatsappUrl, mode: LaunchMode.platformDefault);
+        }
       }
     } catch (e) {
       Get.snackbar(

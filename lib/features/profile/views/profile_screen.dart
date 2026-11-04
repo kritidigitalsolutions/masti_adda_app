@@ -72,10 +72,7 @@ class ProfileScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
         children: [
-          if (canPop) ...[
-            const AppBackButton(),
-            const SizedBox(width: 12),
-          ],
+          if (canPop) ...[const AppBackButton(), const SizedBox(width: 12)],
           Text('Profile', style: text16(fontWeight: FontWeight.w600)),
         ],
       ),
