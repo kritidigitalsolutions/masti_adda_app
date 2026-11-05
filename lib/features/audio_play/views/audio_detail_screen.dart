@@ -89,99 +89,80 @@ class AudioDetailScreen extends StatelessWidget {
   }
 
   Widget _buildHero(AudioDetailController controller, AudioStoryModel story) {
-    final heroImage = story.bannerUrl.isNotEmpty
-        ? story.bannerUrl
-        : story.imageUrl;
-    return Stack(
-      children: [
-        // Cover image
-        SizedBox(
-          height: 260,
-          width: double.infinity,
-          child: heroImage.isNotEmpty
-              ? Image.network(
-                  heroImage,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    height: 260,
-                    color: AppColors.cardColor,
-                    child: const Center(
-                      child: Icon(
-                        Icons.headphones_rounded,
-                        color: AppColors.hintTextColor,
-                        size: 60,
-                      ),
-                    ),
-                  ),
-                )
-              : Container(
-                  height: 260,
-                  color: AppColors.cardColor,
-                  child: const Center(
-                    child: Icon(
-                      Icons.headphones_rounded,
-                      color: AppColors.hintTextColor,
-                      size: 60,
-                    ),
-                  ),
-                ),
-        ),
-        // Gradient bottom overlay
-        Container(
-          height: 260,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                AppColors.backgroundColor.withValues(alpha: 0.95),
-              ],
-            ),
-          ),
-        ),
-        // Top bar
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: SafeArea(
+    final heroImage = story.imageUrl.isNotEmpty
+        ? story.imageUrl
+        : story.bannerUrl;
+
+    return Container(
+      height: 300,
+      width: double.infinity,
+      color: AppColors.cardColor,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Centered Full Poster (Portrait, clear & unblurred)
+          SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const AppBackButton(isOverlay: true),
-                ],
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 160,
+                    height: 230,
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 14,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: heroImage.isNotEmpty
+                        ? Image.network(
+                            heroImage,
+                            fit: BoxFit.fill,
+                            errorBuilder: (_, _, _) => Container(
+                              color: AppColors.surfaceColor,
+                              child: const Icon(
+                                Icons.headphones_rounded,
+                                size: 50,
+                                color: AppColors.hintTextColor,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            color: AppColors.surfaceColor,
+                            child: const Icon(
+                              Icons.headphones_rounded,
+                              size: 50,
+                              color: AppColors.hintTextColor,
+                            ),
+                          ),
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-        // Title overlay at bottom
-        Positioned(
-          bottom: 16,
-          left: 16,
-          right: 16,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                story.title,
-                style: appTextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textColor,
+          // Top back button
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: const [
+                    AppBackButton(isOverlay: true),
+                  ],
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(
-                story.subtitle,
-                style: text13(color: AppColors.secondaryTextColor),
-              ),
-            ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -415,14 +396,27 @@ class AudioDetailScreen extends StatelessWidget {
 
                         if (isDownloading) {
                           return Container(
-                            width: 32,
-                            height: 32,
-                            padding: const EdgeInsets.all(6),
+                            width: 38,
+                            height: 38,
+                            alignment: Alignment.center,
                             margin: const EdgeInsets.only(right: 6),
-                            child: CircularProgressIndicator(
-                              value: progress > 0 ? progress : null,
-                              strokeWidth: 2.5,
-                              color: AppColors.primaryColor,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                CircularProgressIndicator(
+                                  value: progress > 0 ? progress : null,
+                                  strokeWidth: 2.5,
+                                  color: AppColors.primaryColor,
+                                ),
+                                Text(
+                                  '${(progress * 100).toInt()}%',
+                                  style: const TextStyle(
+                                    fontSize: 8,
+                                    color: AppColors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         }
@@ -560,7 +554,7 @@ class AudioDetailScreen extends StatelessWidget {
                             ? Image.network(
                                 item.imageUrl,
                                 width: double.infinity,
-                                fit: BoxFit.cover,
+                                fit: BoxFit.fill,
                                 errorBuilder: (_, _, _) => Container(
                                   color: AppColors.cardColor,
                                   child: const Center(

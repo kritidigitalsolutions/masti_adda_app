@@ -211,24 +211,34 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     final pages = _getPages();
 
-    return Obx(
-      () => Scaffold(
-        backgroundColor: AppColors.backgroundColor,
-        bottomNavigationBar: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const AudioMiniPlayer(),
-            BottomNavBar(
-              currentIndex: controller.selectedIndex.value,
-              onTap: controller.changeTab,
-            ),
-          ],
+    return Obx(() {
+      final isHome = controller.selectedIndex.value == 0;
+      return PopScope(
+        canPop: isHome,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          if (!isHome) {
+            controller.changeTab(0);
+          }
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.backgroundColor,
+          bottomNavigationBar: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const AudioMiniPlayer(),
+              BottomNavBar(
+                currentIndex: controller.selectedIndex.value,
+                onTap: controller.changeTab,
+              ),
+            ],
+          ),
+          body: IndexedStack(
+            index: controller.selectedIndex.value,
+            children: pages,
+          ),
         ),
-        body: IndexedStack(
-          index: controller.selectedIndex.value,
-          children: pages,
-        ),
-      ),
-    );
+      );
+    });
   }
 }

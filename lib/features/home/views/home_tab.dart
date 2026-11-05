@@ -454,9 +454,21 @@ class _HomeTabState extends State<HomeTab> {
   // ─── Hero Banner / Trending Card ─────────────────────────────────────────
   Widget _buildHeroBanner() {
     return Obx(() {
-      final List<dynamic> banners = _homeController.banners.isNotEmpty
+      final List<dynamic> rawBanners = _homeController.banners.isNotEmpty
           ? _homeController.banners
           : [];
+
+      final List<dynamic> banners = rawBanners.where((item) {
+        if (item is HomeBannerItem) {
+          return item.isVisible;
+        } else if (item is Map<String, dynamic>) {
+          final isHide = item['isHide'] ?? item['is_hide'] ?? item['hide'];
+          if (isHide == true || isHide == 1 || isHide.toString().toLowerCase() == 'true') {
+            return false;
+          }
+        }
+        return true;
+      }).toList();
 
       if (_homeController.isBannersLoading.value && banners.isEmpty) {
         return const HomeBannerShimmer();
@@ -963,6 +975,18 @@ class _HomeTabState extends State<HomeTab> {
     }
   }
 
+  // ─── Content Type Determination ───────────────────────────────────────────
+  String _determineContentType(ContentModel c) {
+    final t = c.type.toLowerCase().trim();
+    if (t == 'movie') return 'movie';
+    if (t.contains('series') || t == 'webseries' || t == 'web_series') return 'series';
+    if (t.contains('drama') || t.contains('micro') || t.contains('short')) return 'microdrama';
+    if (_movieController.allMovies.any((m) => m.id == c.id)) return 'movie';
+    if ((_seriesController.allSeries.value?.series ?? []).any((s) => s.id == c.id)) return 'series';
+    if ((_microDramaController.allMicroDrama.value?.microdramas ?? []).any((d) => d.id == c.id)) return 'microdrama';
+    return 'movie';
+  }
+
   // ─── 1. "For You" Tab Content ───────────────────────────────────────────
   Widget _buildForYouContent() {
     return Obx(() {
@@ -972,36 +996,168 @@ class _HomeTabState extends State<HomeTab> {
       final isSeriesLoading =
           _seriesController.allSeriesStatus.value == Status.loading &&
           (_seriesController.allSeries.value?.series.isEmpty ?? true);
+      final isCatsLoading =
+          _homeController.isCategoriesLoading.value &&
+          _homeController.categories.isEmpty;
 
-      if (isMoviesLoading && isSeriesLoading) {
+      if (isMoviesLoading && isSeriesLoading && isCatsLoading) {
         return const HomeFeedShimmer(sectionCount: 3);
       }
 
-      // Popular Movies
-      List<MovieModel> popularMovies = _movieController.allMovies
-          .where((m) => m.isPopular)
-          .toList();
-      if (popularMovies.isEmpty) {
-        popularMovies = List<MovieModel>.from(_movieController.allMovies)
-          ..sort((a, b) => b.rating.compareTo(a.rating));
+      final allMovies = _movieController.allMovies.where((m) => m.isVisible).toList();
+      final allSeries = (_seriesController.allSeries.value?.series ?? []).where((s) => s.isVisible).toList();
+      final allDramas = (_microDramaController.allMicroDrama.value?.microdramas ?? []).where((d) => d.isVisible).toList();
+
+      // Categories sorted by priority ascending (1, 2, 3...)
+      final sortedCategories = List<CategoryModel>.from(_homeController.categories)
+        .where((cat) => cat.isVisible)
+        .toList()
+        ..sort((a, b) => a.priority.compareTo(b.priority));
+
+      final List<Widget> categorySections = [];
+
+      for (final cat in sortedCategories) {
+        // 1. From categoryContents API
+        final apiContent = _homeController.categoryContents[cat.id] ?? [];
+        final visibleApiContent = apiContent.where((c) => c.isVisible).toList();
+
+        // 2. Local matches
+        final matchedMovies = allMovies.where((m) => _matchesMovieCategory(m, cat)).toList();
+        final matchedSeries = allSeries.where((s) => _matchesSeriesCategory(s, cat)).toList();
+        final matchedDramas = allDramas.where((d) => _matchesDramaCategory(d, cat)).toList();
+
+        final List<Map<String, dynamic>> items = [];
+        final Set<String> seenIds = {};
+
+        for (final c in visibleApiContent) {
+          if (c.id.isNotEmpty && !seenIds.contains(c.id)) {
+            seenIds.add(c.id);
+            items.add({
+              'id': c.id,
+              'title': c.title,
+              'image': c.poster.isNotEmpty ? c.poster : c.banner,
+              'type': _determineContentType(c),
+              'isPremium': c.isPremium,
+              'priority': c.priority,
+              'position': c.position,
+              'rating': c.rating.toDouble(),
+            });
+          }
+        }
+
+        for (final m in matchedMovies) {
+          if (m.id.isNotEmpty && !seenIds.contains(m.id)) {
+            seenIds.add(m.id);
+            items.add({
+              'id': m.id,
+              'title': m.title,
+              'image': m.poster.isNotEmpty ? m.poster : m.banner,
+              'type': 'movie',
+              'isPremium': m.isPremium,
+              'priority': m.priority,
+              'position': 0,
+              'rating': m.rating,
+            });
+          }
+        }
+
+        for (final s in matchedSeries) {
+          if (s.id.isNotEmpty && !seenIds.contains(s.id)) {
+            seenIds.add(s.id);
+            items.add({
+              'id': s.id,
+              'title': s.title,
+              'image': s.poster.isNotEmpty ? s.poster : s.banner,
+              'type': 'series',
+              'isPremium': s.isPremium,
+              'priority': s.priority,
+              'position': 0,
+              'rating': s.rating,
+            });
+          }
+        }
+
+        for (final d in matchedDramas) {
+          if (d.id.isNotEmpty && !seenIds.contains(d.id)) {
+            seenIds.add(d.id);
+            items.add({
+              'id': d.id,
+              'title': d.title,
+              'image': d.poster.isNotEmpty ? d.poster : d.banner,
+              'type': 'microdrama',
+              'isPremium': d.isPremium,
+              'priority': d.priority,
+              'position': 0,
+              'rating': d.rating.toDouble(),
+            });
+          }
+        }
+
+        if (items.isNotEmpty) {
+          // Sort items inside category by priority ascending (1, 2, 3...), then position, then rating
+          items.sort((a, b) {
+            final posA = a['position'] as int? ?? 0;
+            final posB = b['position'] as int? ?? 0;
+            if (posA != 0 && posB != 0 && posA != posB) {
+              return posA.compareTo(posB);
+            } else if (posA != 0 && posB == 0) {
+              return -1;
+            } else if (posA == 0 && posB != 0) {
+              return 1;
+            }
+            final pA = a['priority'] as int? ?? 0;
+            final pB = b['priority'] as int? ?? 0;
+            if (pA != pB) return pA.compareTo(pB);
+            final rA = (a['rating'] as num?)?.toDouble() ?? 0.0;
+            final rB = (b['rating'] as num?)?.toDouble() ?? 0.0;
+            return rB.compareTo(rA);
+          });
+
+          categorySections.add(
+            _buildMediaSection(
+              title: cat.name,
+              items: items,
+              onViewAll: () => Get.toNamed(
+                AppRoutes.movieListing,
+                arguments: {
+                  'category': cat.name,
+                  'categoryId': cat.id,
+                  'categorySlug': cat.slug,
+                },
+              ),
+            ),
+          );
+        }
       }
 
-      // Top Web Series
-      final allSeries = _seriesController.allSeries.value?.series ?? [];
-      List<Series> topSeries = allSeries.where((s) => s.isPopular).toList();
-      if (topSeries.isEmpty) {
-        topSeries = List<Series>.from(allSeries)
-          ..sort((a, b) => b.rating.compareTo(a.rating));
-      }
+      // Fallback sections if no categories available
+      if (categorySections.isEmpty) {
+        List<MovieModel> popularMovies = allMovies
+            .where((m) => m.isPopular)
+            .toList();
+        if (popularMovies.isEmpty) {
+          popularMovies = List<MovieModel>.from(allMovies)
+            ..sort((a, b) {
+              if (a.priority != b.priority) return a.priority.compareTo(b.priority);
+              return b.rating.compareTo(a.rating);
+            });
+        } else {
+          popularMovies.sort((a, b) => a.priority.compareTo(b.priority));
+        }
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Continue Watching
-          _buildContinueWatchingSection(),
+        List<Series> topSeries = allSeries.where((s) => s.isPopular).toList();
+        if (topSeries.isEmpty) {
+          topSeries = List<Series>.from(allSeries)
+            ..sort((a, b) {
+              if (a.priority != b.priority) return a.priority.compareTo(b.priority);
+              return b.rating.compareTo(a.rating);
+            });
+        } else {
+          topSeries.sort((a, b) => a.priority.compareTo(b.priority));
+        }
 
-          // Popular Movies
-          if (popularMovies.isNotEmpty)
+        if (popularMovies.isNotEmpty) {
+          categorySections.add(
             _buildMediaSection(
               title: 'Popular Movies',
               items: popularMovies.map((m) => _toMap(m, 'movie')).toList(),
@@ -1010,9 +1166,11 @@ class _HomeTabState extends State<HomeTab> {
                 arguments: {'title': 'Popular Movies', 'category': 'All'},
               ),
             ),
+          );
+        }
 
-          // Top Web Series
-          if (topSeries.isNotEmpty)
+        if (topSeries.isNotEmpty) {
+          categorySections.add(
             _buildMediaSection(
               title: 'Top Web Series',
               items: topSeries.map((s) => _toMap(s, 'series')).toList(),
@@ -1021,9 +1179,20 @@ class _HomeTabState extends State<HomeTab> {
                 arguments: {'title': 'Top Web Series', 'category': 'All'},
               ),
             ),
+          );
+        }
 
-          // Trending Micro Dramas
-          _buildMicroDramaHorizontalSection(),
+        categorySections.add(_buildMicroDramaHorizontalSection());
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Continue Watching
+          _buildContinueWatchingSection(),
+
+          // Categories Sections from API
+          ...categorySections,
         ],
       );
     });
@@ -1046,9 +1215,10 @@ class _HomeTabState extends State<HomeTab> {
         );
       }
 
-      final allMovies = _movieController.allMovies;
+      final allMovies = _movieController.allMovies.where((m) => m.isVisible).toList();
       // Sort categories by priority ascending (priority 1, 2, 3...)
       final sortedCategories = List<CategoryModel>.from(_homeController.categories)
+        ..where((cat) => cat.isVisible)
         ..sort((a, b) => a.priority.compareTo(b.priority));
 
       final List<Widget> categorySections = [];
@@ -1056,12 +1226,12 @@ class _HomeTabState extends State<HomeTab> {
         // 1. From categoryContents API
         final apiContent = _homeController.categoryContents[cat.id] ?? [];
         final apiMovies = apiContent
-            .where((c) => _isMovieContent(c, allMovies))
+            .where((c) => c.isVisible && _isMovieContent(c, allMovies))
             .toList();
 
         // 2. From allMovies (local match)
         final matchedMovies = allMovies
-            .where((m) => _matchesMovieCategory(m, cat))
+            .where((m) => m.isVisible && _matchesMovieCategory(m, cat))
             .toList();
 
         final List<Map<String, dynamic>> items = [];
@@ -1077,6 +1247,7 @@ class _HomeTabState extends State<HomeTab> {
               'type': 'movie',
               'isPremium': c.isPremium,
               'priority': c.priority,
+              'position': c.position,
               'rating': c.rating.toDouble(),
             });
           }
@@ -1092,14 +1263,24 @@ class _HomeTabState extends State<HomeTab> {
               'type': 'movie',
               'isPremium': m.isPremium,
               'priority': m.priority,
+              'position': 0,
               'rating': m.rating,
             });
           }
         }
 
         if (items.isNotEmpty) {
-          // Sort movies by priority, then rating
+          // Sort movies by priority, then position, then rating
           items.sort((a, b) {
+            final posA = a['position'] as int? ?? 0;
+            final posB = b['position'] as int? ?? 0;
+            if (posA != 0 && posB != 0 && posA != posB) {
+              return posA.compareTo(posB);
+            } else if (posA != 0 && posB == 0) {
+              return -1;
+            } else if (posA == 0 && posB != 0) {
+              return 1;
+            }
             final pA = a['priority'] as int? ?? 0;
             final pB = b['priority'] as int? ?? 0;
             if (pA != pB) return pA.compareTo(pB);
@@ -1173,9 +1354,12 @@ class _HomeTabState extends State<HomeTab> {
         );
       }
 
-      final allSeries = _seriesController.allSeries.value?.series ?? [];
+      final allSeries = (_seriesController.allSeries.value?.series ?? [])
+          .where((s) => s.isVisible)
+          .toList();
       // Sort categories by priority ascending (priority 1, 2, 3...)
       final sortedCategories = List<CategoryModel>.from(_homeController.categories)
+        ..where((cat) => cat.isVisible)
         ..sort((a, b) => a.priority.compareTo(b.priority));
 
       final List<Widget> categorySections = [];
@@ -1183,12 +1367,12 @@ class _HomeTabState extends State<HomeTab> {
         // 1. From categoryContents API
         final apiContent = _homeController.categoryContents[cat.id] ?? [];
         final apiSeries = apiContent
-            .where((c) => _isSeriesContent(c, allSeries))
+            .where((c) => c.isVisible && _isSeriesContent(c, allSeries))
             .toList();
 
         // 2. From allSeries (local match)
         final matchedSeries = allSeries
-            .where((s) => _matchesSeriesCategory(s, cat))
+            .where((s) => s.isVisible && _matchesSeriesCategory(s, cat))
             .toList();
 
         final List<Map<String, dynamic>> items = [];
@@ -1204,6 +1388,7 @@ class _HomeTabState extends State<HomeTab> {
               'type': 'series',
               'isPremium': c.isPremium,
               'priority': c.priority,
+              'position': c.position,
               'rating': c.rating.toDouble(),
             });
           }
@@ -1219,14 +1404,24 @@ class _HomeTabState extends State<HomeTab> {
               'type': 'series',
               'isPremium': s.isPremium,
               'priority': s.priority,
+              'position': 0,
               'rating': s.rating,
             });
           }
         }
 
         if (items.isNotEmpty) {
-          // Sort series by priority, then rating
+          // Sort series by priority, then position, then rating
           items.sort((a, b) {
+            final posA = a['position'] as int? ?? 0;
+            final posB = b['position'] as int? ?? 0;
+            if (posA != 0 && posB != 0 && posA != posB) {
+              return posA.compareTo(posB);
+            } else if (posA != 0 && posB == 0) {
+              return -1;
+            } else if (posA == 0 && posB != 0) {
+              return 1;
+            }
             final pA = a['priority'] as int? ?? 0;
             final pB = b['priority'] as int? ?? 0;
             if (pA != pB) return pA.compareTo(pB);
@@ -1301,10 +1496,12 @@ class _HomeTabState extends State<HomeTab> {
         );
       }
 
-      final dramas =
-          _microDramaController.allMicroDrama.value?.microdramas ?? [];
+      final dramas = (_microDramaController.allMicroDrama.value?.microdramas ?? [])
+          .where((d) => d.isVisible)
+          .toList();
       // Sort categories by priority ascending (priority 1, 2, 3...)
       final sortedCategories = List<CategoryModel>.from(_homeController.categories)
+        ..where((cat) => cat.isVisible)
         ..sort((a, b) => a.priority.compareTo(b.priority));
 
       final List<Widget> categorySections = [];
@@ -1312,12 +1509,12 @@ class _HomeTabState extends State<HomeTab> {
         // 1. From categoryContents API
         final apiContent = _homeController.categoryContents[cat.id] ?? [];
         final apiDramas = apiContent
-            .where((c) => _isDramaContent(c, dramas))
+            .where((c) => c.isVisible && _isDramaContent(c, dramas))
             .toList();
 
         // 2. From allMicroDrama (local match)
         final matchedDramas = dramas
-            .where((d) => _matchesDramaCategory(d, cat))
+            .where((d) => d.isVisible && _matchesDramaCategory(d, cat))
             .toList();
 
         final List<Map<String, dynamic>> items = [];
@@ -1333,6 +1530,7 @@ class _HomeTabState extends State<HomeTab> {
               'type': 'microdrama',
               'isPremium': c.isPremium,
               'priority': c.priority,
+              'position': c.position,
               'rating': c.rating.toDouble(),
             });
           }
@@ -1348,14 +1546,24 @@ class _HomeTabState extends State<HomeTab> {
               'type': 'microdrama',
               'isPremium': d.isPremium,
               'priority': d.priority,
+              'position': 0,
               'rating': d.rating.toDouble(),
             });
           }
         }
 
         if (items.isNotEmpty) {
-          // Sort dramas by priority, then rating
+          // Sort dramas by priority, then position, then rating
           items.sort((a, b) {
+            final posA = a['position'] as int? ?? 0;
+            final posB = b['position'] as int? ?? 0;
+            if (posA != 0 && posB != 0 && posA != posB) {
+              return posA.compareTo(posB);
+            } else if (posA != 0 && posB == 0) {
+              return -1;
+            } else if (posA == 0 && posB != 0) {
+              return 1;
+            }
             final pA = a['priority'] as int? ?? 0;
             final pB = b['priority'] as int? ?? 0;
             if (pA != pB) return pA.compareTo(pB);
@@ -1401,6 +1609,8 @@ class _HomeTabState extends State<HomeTab> {
                     'image': d.poster.isNotEmpty ? d.poster : d.banner,
                     'type': 'microdrama',
                     'isPremium': d.isPremium,
+                    'priority': d.priority,
+                    'rating': d.rating.toDouble(),
                   },
                 )
                 .toList(),
@@ -1457,8 +1667,11 @@ class _HomeTabState extends State<HomeTab> {
   // ─── Micro Drama Section in For You Feed ────────────────────────────────
   Widget _buildMicroDramaHorizontalSection() {
     return Obx(() {
-      final dramas =
-          _microDramaController.allMicroDrama.value?.microdramas ?? [];
+      final dramas = (_microDramaController.allMicroDrama.value?.microdramas ?? [])
+          .where((d) => d.isVisible)
+          .toList()
+        ..sort((a, b) => a.priority.compareTo(b.priority));
+
       if (dramas.isEmpty) return const SizedBox.shrink();
 
       return _buildMediaSection(
@@ -1472,6 +1685,8 @@ class _HomeTabState extends State<HomeTab> {
                 'image': d.poster.isNotEmpty ? d.poster : d.banner,
                 'type': 'microdrama',
                 'isPremium': d.isPremium,
+                'priority': d.priority,
+                'rating': d.rating.toDouble(),
               },
             )
             .toList(),
@@ -1844,23 +2059,48 @@ class _HomeTabState extends State<HomeTab> {
     }
   }
 
-  // ─── Helper to convert MovieModel / Series to Map with type ──────────
+  // ─── Helper to convert MovieModel / Series / Microdrama to Map with type ──
   Map<String, dynamic> _toMap(dynamic item, String type) {
     if (item is MovieModel) {
       return {
         'id': item.id,
         'title': item.title,
-        'image': item.poster,
+        'image': item.poster.isNotEmpty ? item.poster : item.banner,
         'type': type,
         'isPremium': item.isPremium,
+        'priority': item.priority,
+        'rating': item.rating,
       };
     } else if (item is Series) {
       return {
         'id': item.id,
         'title': item.title,
-        'image': item.poster,
+        'image': item.poster.isNotEmpty ? item.poster : item.banner,
         'type': type,
         'isPremium': item.isPremium,
+        'priority': item.priority,
+        'rating': item.rating,
+      };
+    } else if (item is Microdrama) {
+      return {
+        'id': item.id,
+        'title': item.title,
+        'image': item.poster.isNotEmpty ? item.poster : item.banner,
+        'type': type,
+        'isPremium': item.isPremium,
+        'priority': item.priority,
+        'rating': item.rating.toDouble(),
+      };
+    } else if (item is ContentModel) {
+      return {
+        'id': item.id,
+        'title': item.title,
+        'image': item.poster.isNotEmpty ? item.poster : item.banner,
+        'type': type,
+        'isPremium': item.isPremium,
+        'priority': item.priority,
+        'rating': item.rating.toDouble(),
+        'position': item.position,
       };
     }
     return {};
@@ -3007,9 +3247,21 @@ class _HomeTabPreviousDesignState extends State<HomeTabPreviousDesign> {
 
   Widget _buildHeroBanner() {
     return Obx(() {
-      final List<dynamic> banners = _homeController.banners.isNotEmpty
+      final List<dynamic> rawBanners = _homeController.banners.isNotEmpty
           ? _homeController.banners
           : [];
+
+      final List<dynamic> banners = rawBanners.where((item) {
+        if (item is HomeBannerItem) {
+          return item.isVisible;
+        } else if (item is Map<String, dynamic>) {
+          final isHide = item['isHide'] ?? item['is_hide'] ?? item['hide'];
+          if (isHide == true || isHide == 1 || isHide.toString().toLowerCase() == 'true') {
+            return false;
+          }
+        }
+        return true;
+      }).toList();
 
       if (banners.isEmpty) return const SizedBox.shrink();
 

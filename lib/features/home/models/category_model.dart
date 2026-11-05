@@ -41,6 +41,7 @@ class CategoryModel {
   final String slug;
   final int priority;
   final bool isActive;
+  final bool isHide;
   final String createdAt;
   final String updatedAt;
   final int version;
@@ -51,10 +52,13 @@ class CategoryModel {
     required this.slug,
     required this.priority,
     required this.isActive,
+    this.isHide = false,
     required this.createdAt,
     required this.updatedAt,
     required this.version,
   });
+
+  bool get isVisible => isActive && !isHide;
 
   factory CategoryModel.fromJson(Map<String, dynamic> json) {
     final dynamic active = json['isActive'] ?? json['is_active'] ?? json['active'];
@@ -64,6 +68,13 @@ class CategoryModel {
             active == 1 ||
             active.toString().toLowerCase() == 'true');
 
+    final dynamic hide = json['isHide'] ?? json['is_hide'] ?? json['hide'];
+    final bool isHideParsed = hide == null
+        ? false
+        : (hide == true ||
+            hide == 1 ||
+            hide.toString().toLowerCase() == 'true');
+
     return CategoryModel(
       id: (json['_id'] ?? json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
@@ -72,6 +83,7 @@ class CategoryModel {
           ? (json['priority'] as num).toInt()
           : int.tryParse(json['priority']?.toString() ?? '0') ?? 0,
       isActive: isActiveParsed,
+      isHide: isHideParsed,
       createdAt: (json['createdAt'] ?? '').toString(),
       updatedAt: (json['updatedAt'] ?? '').toString(),
       version: (json['__v'] is num)
@@ -87,6 +99,7 @@ class CategoryModel {
       'slug': slug,
       'priority': priority,
       'isActive': isActive,
+      'isHide': isHide,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
       '__v': version,
@@ -99,6 +112,7 @@ class CategoryModel {
     String? slug,
     int? priority,
     bool? isActive,
+    bool? isHide,
     String? createdAt,
     String? updatedAt,
     int? version,
@@ -109,6 +123,7 @@ class CategoryModel {
       slug: slug ?? this.slug,
       priority: priority ?? this.priority,
       isActive: isActive ?? this.isActive,
+      isHide: isHide ?? this.isHide,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       version: version ?? this.version,

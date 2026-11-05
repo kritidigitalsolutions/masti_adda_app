@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:masti_adda_app/constants/app_colors.dart';
@@ -77,75 +78,101 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
         ? currentEp!.imageUrl
         : (story?.imageUrl ?? '');
 
-    return Stack(
-      children: [
-        // Cover image
-        SizedBox(
-          height: 250,
-          width: double.infinity,
-          child: Image.network(
-            imageUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => Container(
-              height: 250,
-              color: AppColors.cardColor,
-              child: const Center(
-                child: Icon(
-                  Icons.headphones_rounded,
-                  color: AppColors.hintTextColor,
-                  size: 60,
+    return Container(
+      height: 310,
+      width: double.infinity,
+      color: AppColors.cardColor,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Centered Full Poster (Portrait, clear & unblurred)
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    width: 170,
+                    height: 240,
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.6),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: imageUrl.isNotEmpty
+                        ? Image.network(
+                            imageUrl,
+                            fit: BoxFit.fill,
+                            errorBuilder: (_, _, _) => Container(
+                              color: AppColors.surfaceColor,
+                              child: const Icon(
+                                Icons.headphones_rounded,
+                                size: 50,
+                                color: AppColors.hintTextColor,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            color: AppColors.surfaceColor,
+                            child: const Icon(
+                              Icons.headphones_rounded,
+                              size: 50,
+                              color: AppColors.hintTextColor,
+                            ),
+                          ),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        // Gradient overlay
-        Container(
-          height: 250,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                AppColors.backgroundColor.withValues(alpha: 0.95),
-              ],
-            ),
-          ),
-        ),
-        // Top bar
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const AppBackButton(isOverlay: true),
-                  Column(
-                    children: [
-                      Text(
-                        story?.title ?? 'Audio Story',
-                        style: text13(fontWeight: FontWeight.bold),
-                      ),
-                      if (currentEp != null)
-                        Text(
-                          'Episode ${currentEp.episodeNumber}',
-                          style: text10(color: AppColors.secondaryTextColor),
+          // Top bar
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const AppBackButton(isOverlay: true),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Column(
+                          children: [
+                            Text(
+                              story?.title ?? 'Audio Story',
+                              style: text13(fontWeight: FontWeight.bold),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                            if (currentEp != null)
+                              Text(
+                                'Episode ${currentEp.episodeNumber}',
+                                style: text10(color: AppColors.secondaryTextColor),
+                                textAlign: TextAlign.center,
+                              ),
+                          ],
                         ),
-                    ],
-                  ),
-                  // Download Button
-                  _buildDownloadButton(currentEp, story),
-                ],
+                      ),
+                    ),
+                    // Download Button
+                    _buildDownloadButton(currentEp, story),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

@@ -66,12 +66,12 @@ class HomeController extends GetxController {
       isCategoriesLoading.value = true;
       final response = await _homeDatasource.allCategories();
       if (response != null && response.categories.isNotEmpty) {
-        // Active categories sorted by priority (lowest number = highest priority)
+        // Active and non-hidden categories sorted by priority (lowest number = highest priority)
         var topCats = response.categories
-            .where((cat) => cat.isActive)
+            .where((cat) => cat.isVisible)
             .toList();
         if (topCats.isEmpty) {
-          topCats = List<CategoryModel>.from(response.categories);
+          topCats = response.categories.where((cat) => !cat.isHide).toList();
         }
         topCats.sort((a, b) => a.priority.compareTo(b.priority));
         categories.assignAll(topCats);
@@ -107,7 +107,23 @@ class HomeController extends GetxController {
         size: 20,
       );
       if (response != null && response.content.isNotEmpty) {
-        categoryContents[categoryId] = response.content;
+        final visible = response.content.where((c) => c.isVisible).toList();
+        visible.sort((a, b) {
+          final posA = a.position;
+          final posB = b.position;
+          if (posA != 0 && posB != 0 && posA != posB) {
+            return posA.compareTo(posB);
+          } else if (posA != 0 && posB == 0) {
+            return -1;
+          } else if (posA == 0 && posB != 0) {
+            return 1;
+          }
+          if (a.priority != b.priority) {
+            return a.priority.compareTo(b.priority);
+          }
+          return b.rating.compareTo(a.rating);
+        });
+        categoryContents[categoryId] = visible;
       }
     } catch (e) {
       debugPrint("Error fetching category content for $categoryId: $e");

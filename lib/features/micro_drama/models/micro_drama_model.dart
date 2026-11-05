@@ -71,6 +71,7 @@ class Microdrama {
   final String slug;
   final int v;
   final bool isPublished;
+  final bool isHide;
 
   const Microdrama({
     required this.id,
@@ -98,7 +99,10 @@ class Microdrama {
     required this.slug,
     required this.v,
     required this.isPublished,
+    this.isHide = false,
   });
+
+  bool get isVisible => !isHide;
 
   factory Microdrama.fromJson(Map<String, dynamic> json) {
     List<dynamic> parseDynamicList(dynamic val, [dynamic alt]) {
@@ -155,6 +159,9 @@ class Microdrama {
       isPublished: _parseBool(
         json['isPublished'] ?? json['is_published'] ?? json['published'],
       ),
+      isHide: _parseBool(
+        json['isHide'] ?? json['is_hide'] ?? json['hide'],
+      ),
     );
   }
 
@@ -185,6 +192,7 @@ class Microdrama {
       'slug': slug,
       '__v': v,
       'isPublished': isPublished,
+      'isHide': isHide,
     };
   }
 
@@ -214,6 +222,7 @@ class Microdrama {
     String? slug,
     int? v,
     bool? isPublished,
+    bool? isHide,
   }) {
     return Microdrama(
       id: id ?? this.id,
@@ -241,6 +250,7 @@ class Microdrama {
       slug: slug ?? this.slug,
       v: v ?? this.v,
       isPublished: isPublished ?? this.isPublished,
+      isHide: isHide ?? this.isHide,
     );
   }
 }

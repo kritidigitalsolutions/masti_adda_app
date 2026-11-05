@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:masti_adda_app/constants/app_colors.dart';
+import 'package:masti_adda_app/core/services/app_download_service.dart';
 import 'package:masti_adda_app/features/micro_drama/controllers/continue_watching_controller.dart';
 import 'package:masti_adda_app/features/movie/controllers/movie_controller.dart';
 import 'package:masti_adda_app/features/profile/controllers/subscription_status_controller.dart';
@@ -68,7 +69,18 @@ class _MoviePlayerScreenState extends State<MoviePlayerScreen> {
         ? Get.find<ContinueWatchingController>()
         : null;
 
-    if (widget.videoUrl != null && widget.videoUrl!.isNotEmpty) {
+    // Check if downloaded locally for offline playback first
+    final targetId = widget.episodeId ?? widget.contentId;
+    String? localPath;
+    if (targetId != null && targetId.isNotEmpty && Get.isRegistered<AppDownloadService>()) {
+      localPath = AppDownloadService.to.getLocalFilePath(targetId);
+    }
+
+    if (localPath != null && File(localPath).existsSync()) {
+      _qualityUrls['Offline'] = localPath;
+      _selectedQuality = 'Offline';
+      _initializePlayer(localPath);
+    } else if (widget.videoUrl != null && widget.videoUrl!.isNotEmpty) {
       final rawUrl = widget.videoUrl!.trim();
       final isLocal = isLocalFilePath(rawUrl);
       final playUrl = isLocal ? rawUrl : formatMediaUrl(rawUrl);
@@ -76,6 +88,17 @@ class _MoviePlayerScreenState extends State<MoviePlayerScreen> {
       _selectedQuality = isLocal ? 'Offline' : 'Auto';
       _initializePlayer(playUrl);
     } else if (widget.episodeId != null && widget.episodeId!.isNotEmpty) {
+      String? localEpPath;
+      if (Get.isRegistered<AppDownloadService>()) {
+        localEpPath = AppDownloadService.to.getLocalFilePath(widget.episodeId!);
+      }
+      if (localEpPath != null && File(localEpPath).existsSync()) {
+        _qualityUrls['Offline'] = localEpPath;
+        _selectedQuality = 'Offline';
+        _initializePlayer(localEpPath);
+        return;
+      }
+
       _episodeController = Get.put(EpisodeController());
 
       _statusWorker = ever(_episodeController!.detailEpisodeStatus, (
@@ -103,10 +126,19 @@ class _MoviePlayerScreenState extends State<MoviePlayerScreen> {
               return;
             }
           }
-          final videoUrl = formatMediaUrl(episodeDetailVal.episode.videoUrl);
+          final epId = episodeDetailVal.episode.id;
+          String? localEp;
+          if (Get.isRegistered<AppDownloadService>()) {
+            localEp = AppDownloadService.to.getLocalFilePath(epId);
+          }
+          final isOffline = localEp != null && File(localEp).existsSync();
+          final videoUrl = isOffline
+              ? localEp
+              : formatMediaUrl(episodeDetailVal.episode.videoUrl);
+
           if (videoUrl.isNotEmpty) {
-            _qualityUrls['Auto'] = videoUrl;
-            _selectedQuality = 'Auto';
+            _qualityUrls[isOffline ? 'Offline' : 'Auto'] = videoUrl;
+            _selectedQuality = isOffline ? 'Offline' : 'Auto';
             _initializePlayer(videoUrl);
           } else {
             if (mounted) {
@@ -134,6 +166,17 @@ class _MoviePlayerScreenState extends State<MoviePlayerScreen> {
 
       _episodeController!.fetchEpisodeDetail(widget.episodeId!);
     } else if (widget.contentId != null && widget.contentId!.isNotEmpty) {
+      String? localMovie;
+      if (Get.isRegistered<AppDownloadService>()) {
+        localMovie = AppDownloadService.to.getLocalFilePath(widget.contentId!);
+      }
+      if (localMovie != null && File(localMovie).existsSync()) {
+        _qualityUrls['Offline'] = localMovie;
+        _selectedQuality = 'Offline';
+        _initializePlayer(localMovie);
+        return;
+      }
+
       // ContentId given without videoUrl (e.g. from Continue Watching movie item)
       final movieController = Get.isRegistered<MovieController>()
           ? Get.find<MovieController>()
@@ -143,10 +186,19 @@ class _MoviePlayerScreenState extends State<MoviePlayerScreen> {
         if (status == Status.success &&
             movieController.movieDetail.value != null) {
           final movie = movieController.movieDetail.value!;
-          final videoUrl = formatMediaUrl(movie.videoUrl);
+          final movieId = movie.id;
+          String? localMov;
+          if (Get.isRegistered<AppDownloadService>()) {
+            localMov = AppDownloadService.to.getLocalFilePath(movieId);
+          }
+          final isOffline = localMov != null && File(localMov).existsSync();
+          final videoUrl = isOffline
+              ? localMov
+              : formatMediaUrl(movie.videoUrl);
+
           if (videoUrl.isNotEmpty) {
-            _qualityUrls['Auto'] = videoUrl;
-            _selectedQuality = 'Auto';
+            _qualityUrls[isOffline ? 'Offline' : 'Auto'] = videoUrl;
+            _selectedQuality = isOffline ? 'Offline' : 'Auto';
             _initializePlayer(videoUrl);
           } else {
             if (mounted) {

@@ -34,7 +34,8 @@ class ContentController extends GetxController {
     searchContentStatus.value = Status.loading;
     final result = await _api.searchContent(query.trim());
     if (result != null) {
-      searchContents.value = result;
+      final visible = result.content.where((c) => c.isVisible).toList();
+      searchContents.value = result.copyWith(content: visible);
       searchContentStatus.value = Status.success;
     } else {
       searchContentStatus.value = Status.error;

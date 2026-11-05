@@ -12,13 +12,15 @@ class SubscriptionPlansResponse {
   });
 
   factory SubscriptionPlansResponse.fromJson(Map<String, dynamic> json) {
+    final plansList = (json['plans'] as List<dynamic>? ?? [])
+        .map((e) => SubscriptionPlan.fromJson(e))
+        .toList();
+    plansList.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     return SubscriptionPlansResponse(
       success: json['success'] ?? false,
       planType: json['planType'] ?? '',
       count: json['count'] ?? 0,
-      plans: (json['plans'] as List<dynamic>? ?? [])
-          .map((e) => SubscriptionPlan.fromJson(e))
-          .toList(),
+      plans: plansList,
     );
   }
 

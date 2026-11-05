@@ -121,6 +121,7 @@ class _MicroDramaScreenState extends State<MicroDramaScreen> {
   List<Microdrama> _filteredDramas(List<Microdrama> allDramas) {
     final catName = currentCategoryName;
     final matched = allDramas.where((d) {
+      if (!d.isVisible) return false;
       if (catName == 'All') return true;
       return _matchesDramaCategoryName(d, catName);
     }).toList();

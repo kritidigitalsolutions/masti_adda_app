@@ -129,8 +129,9 @@ class GolodoliAudioHandler extends BaseAudioHandler with SeekHandler {
 
       // Load into just_audio (supports local offline files & remote URLs)
       Duration? resolvedDuration;
-      if (!url.startsWith('http://') && !url.startsWith('https://') && File(url).existsSync()) {
-        resolvedDuration = await _player.setFilePath(url);
+      final cleanUrl = url.startsWith('file://') ? url.replaceFirst('file://', '') : url;
+      if (!url.startsWith('http://') && !url.startsWith('https://') && File(cleanUrl).existsSync()) {
+        resolvedDuration = await _player.setFilePath(cleanUrl);
       } else {
         resolvedDuration = await _player.setUrl(url);
       }

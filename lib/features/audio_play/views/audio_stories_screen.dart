@@ -338,7 +338,7 @@ class _AudioStoriesScreenState extends State<AudioStoriesScreen> {
                                   displayImageUrl,
                                   width: 70,
                                   height: 70,
-                                  fit: BoxFit.cover,
+                                  fit: BoxFit.fill,
                                   errorBuilder: (_, _, _) => _fallbackPlaceholder(70, 70),
                                 )
                               : _fallbackPlaceholder(70, 70),
@@ -401,7 +401,7 @@ class _AudioStoriesScreenState extends State<AudioStoriesScreen> {
                 story.imageUrl,
                 height: 190,
                 width: double.infinity,
-                fit: BoxFit.cover,
+                fit: BoxFit.fill,
                 errorBuilder: (_, _, _) => _fallbackPlaceholder(double.infinity, 190),
               ),
               Container(
@@ -563,7 +563,7 @@ class _AudioStoriesScreenState extends State<AudioStoriesScreen> {
                     Image.network(
                       story.imageUrl,
                       width: 100,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.fill,
                       errorBuilder: (_, _, _) =>
                           _fallbackPlaceholder(100, 110),
                     ),

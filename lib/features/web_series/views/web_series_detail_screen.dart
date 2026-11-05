@@ -944,14 +944,27 @@ class _WebSeriesDetailScreenState extends State<WebSeriesDetailScreen> {
 
               if (isDownloading) {
                 return Container(
-                  width: 30,
-                  height: 30,
-                  padding: const EdgeInsets.all(6),
+                  width: 38,
+                  height: 38,
+                  alignment: Alignment.center,
                   margin: const EdgeInsets.only(right: 6),
-                  child: CircularProgressIndicator(
-                    value: progress > 0 ? progress : null,
-                    strokeWidth: 2,
-                    color: AppColors.primaryColor,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value: progress > 0 ? progress : null,
+                        strokeWidth: 2,
+                        color: AppColors.primaryColor,
+                      ),
+                      Text(
+                        '${(progress * 100).toInt()}%',
+                        style: const TextStyle(
+                          fontSize: 8,
+                          color: AppColors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 );
               }

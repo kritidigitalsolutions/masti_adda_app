@@ -1,5 +1,5 @@
 class AppUrl {
-  // static const String baseUrl = 'http://192.168.1.21:5000';
+  // static const String baseUrl = 'http://192.168.1.14:5000';
   static const String baseUrl = 'https://api.mastiadda.in';
   // static const String webBaseUrl = 'http://192.168.1.2:3000';
   // static const String webBaseUrl = 'http://192.168.1.2:5000';
@@ -113,6 +113,14 @@ class AppUrl {
       "$baseUrl/api/audio-stories/search?q=${Uri.encodeComponent(query)}";
   static String singleAudioStory(String storyId) =>
       "$baseUrl/api/audio-stories/$storyId";
+  static String audioStoryDetail(String id) =>
+      "$baseUrl/api/audio-stories/detail/$id";
+  static String audioStoryEpisodes(String id) =>
+      "$baseUrl/api/audio-stories/episodes/$id";
+  static String audioEpisodesByStory(String id) =>
+      "$baseUrl/api/audio-episodes?storyId=$id";
+  static String audioEpisodesByStoryAlt(String id) =>
+      "$baseUrl/api/audio-episodes?story=$id";
   static String playAudioEpisode(String episodeId) =>
       "$baseUrl/api/audio-episodes/$episodeId/play";
   static const String saveAudioProgress = "$baseUrl/api/audio-progress";

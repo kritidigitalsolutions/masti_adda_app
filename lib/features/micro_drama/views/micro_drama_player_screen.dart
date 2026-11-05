@@ -373,7 +373,10 @@ class _DramaReelItemState extends State<_DramaReelItem> {
     final isEpLocal = isLocalFilePath(widget.episode.videoUrl);
 
     if (isLocal) {
-      _vpc = VideoPlayerController.file(File(localPath));
+      final clean = localPath.startsWith('file://')
+          ? localPath.replaceFirst('file://', '')
+          : localPath;
+      _vpc = VideoPlayerController.file(File(clean));
     } else if (isEpLocal) {
       final clean = widget.episode.videoUrl.startsWith('file://')
           ? widget.episode.videoUrl.replaceFirst('file://', '')

@@ -177,7 +177,9 @@ class _DiscoverTabState extends State<DiscoverTab> {
 
   Widget _buildSearchResults() {
     final status = _contentController.searchContentStatus.value;
-    final items = _contentController.searchContents.value?.content ?? [];
+    final items = (_contentController.searchContents.value?.content ?? [])
+        .where((i) => i.isVisible)
+        .toList();
 
     if (status == Status.loading) {
       return Padding(
@@ -603,8 +605,18 @@ class _DiscoverTabState extends State<DiscoverTab> {
   }
 
   // 🔹 New: category tap ke liye alag, debounce-free handler
-  void _onCategoryTap(String query) {
+  void _onCategoryTap(String label) {
     _debounce?.cancel();
+    String query = label;
+    final lower = label.trim().toLowerCase();
+    if (lower == 'web series' || lower == 'web-series' || lower == 'series') {
+      query = 'series';
+    } else if (lower == 'movies' || lower == 'movie') {
+      query = 'movie';
+    } else if (lower == 'micro dramas' || lower == 'micro drama' || lower == 'microdrama') {
+      query = 'microdrama';
+    }
+
     _searchController.text = query;
     _searchController.selection = TextSelection.fromPosition(
       TextPosition(offset: query.length),

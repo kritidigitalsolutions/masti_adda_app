@@ -79,21 +79,97 @@ class AudioRepository {
     }
   }
 
+  /// 4. SEARCH AUDIO STORIES
+  /// Endpoint: GET /api/audio-stories/search?q={query}
+  Future<List<AudioStoryModel>> searchAudioStories(String query) async {
+    if (query.trim().isEmpty) return [];
+    try {
+      final response = await _apiService.getApi(AppUrl.searchAudioStories(query));
+      if (response != null && response['success'] == true) {
+        final List list = response['results'] ?? response['stories'] ?? response['data'] ?? [];
+        return list
+            .map((e) => AudioStoryModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      } else if (response is List) {
+        return response
+            .map((e) => AudioStoryModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint("AudioRepository.searchAudioStories Error: $e");
+      return [];
+    }
+  }
+
   /// 4. GET SINGLE AUDIO STORY (Includes Episodes)
   /// Endpoint: GET /api/audio-stories/{story_id}
   Future<AudioStoryModel?> getAudioStoryDetail(String storyId) async {
     try {
       final response = await _apiService.getApi(AppUrl.singleAudioStory(storyId));
-      if (response != null && response['success'] == true && response['story'] != null) {
-        return AudioStoryModel.fromJson(Map<String, dynamic>.from(response['story']));
-      } else if (response != null && response['data'] != null) {
-        return AudioStoryModel.fromJson(Map<String, dynamic>.from(response['data']));
+      if (response != null) {
+        if (response['success'] == true && response['story'] != null) {
+          return AudioStoryModel.fromJson(Map<String, dynamic>.from(response['story']));
+        } else if (response['data'] != null) {
+          return AudioStoryModel.fromJson(Map<String, dynamic>.from(response['data']));
+        } else if (response['_id'] != null || response['id'] != null) {
+          return AudioStoryModel.fromJson(Map<String, dynamic>.from(response));
+        }
       }
-      return null;
     } catch (e) {
-      debugPrint("AudioRepository.getAudioStoryDetail Error: $e");
-      return null;
+      debugPrint("Primary getAudioStoryDetail failed: $e");
     }
+
+    try {
+      final response = await _apiService.getApi(AppUrl.audioStoryDetail(storyId));
+      if (response != null) {
+        if (response['success'] == true && response['story'] != null) {
+          return AudioStoryModel.fromJson(Map<String, dynamic>.from(response['story']));
+        } else if (response['data'] != null) {
+          return AudioStoryModel.fromJson(Map<String, dynamic>.from(response['data']));
+        } else if (response['_id'] != null || response['id'] != null) {
+          return AudioStoryModel.fromJson(Map<String, dynamic>.from(response));
+        }
+      }
+    } catch (e) {
+      debugPrint("Fallback audioStoryDetail failed: $e");
+    }
+
+    return null;
+  }
+
+  /// 5. FETCH AUDIO EPISODES FOR A STORY
+  Future<List<AudioEpisodeModel>> fetchAudioEpisodes(String storyId) async {
+    final urls = [
+      AppUrl.audioStoryEpisodes(storyId),
+      AppUrl.audioEpisodesByStory(storyId),
+      AppUrl.audioEpisodesByStoryAlt(storyId),
+    ];
+
+    for (var url in urls) {
+      try {
+        final response = await _apiService.getApi(url);
+        if (response != null) {
+          List list = [];
+          if (response is List) {
+            list = response;
+          } else if (response['success'] == true) {
+            list = response['episodes'] ?? response['data'] ?? response['list'] ?? [];
+          } else if (response['episodes'] is List) {
+            list = response['episodes'];
+          }
+          if (list.isNotEmpty) {
+            return list
+                .whereType<Map>()
+                .map((e) => AudioEpisodeModel.fromJson(Map<String, dynamic>.from(e), parentStoryId: storyId))
+                .toList();
+          }
+        }
+      } catch (e) {
+        debugPrint("fetchAudioEpisodes error for $url: $e");
+      }
+    }
+    return [];
   }
 
   /// 6. PLAY/STREAM AUDIO EPISODE

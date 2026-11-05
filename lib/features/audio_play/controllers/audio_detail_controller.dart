@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:masti_adda_app/features/audio_play/controllers/audio_stories_controller.dart';
 import 'package:masti_adda_app/features/audio_play/models/audio_story_model.dart';
 import 'package:masti_adda_app/features/audio_play/repositories/audio_repository.dart';
 import 'package:masti_adda_app/routes/app_routes.dart';
@@ -18,31 +19,86 @@ class AudioDetailController extends GetxController {
   void onInit() {
     super.onInit();
     final args = Get.arguments;
-    if (args is String) {
-      storyId.value = args;
-      fetchStoryDetail(storyId.value);
-    } else if (args is AudioStoryModel) {
+    if (args is AudioStoryModel) {
       story.value = args;
       storyId.value = args.id;
+      isLoading.value = false;
       if (args.episodes.isEmpty && args.id.isNotEmpty) {
         fetchStoryDetail(args.id);
       } else {
-        isLoading.value = false;
         fetchMoreLikeThis();
       }
-    } else if (args is Map && args['id'] != null) {
-      storyId.value = args['id'].toString();
+    } else if (args is String) {
+      storyId.value = args;
+      if (Get.isRegistered<AudioStoriesController>()) {
+        try {
+          final cached = Get.find<AudioStoriesController>().getStoryById(args);
+          if (cached != null) {
+            story.value = cached;
+            isLoading.value = false;
+          }
+        } catch (_) {}
+      }
       fetchStoryDetail(storyId.value);
+    } else if (args is Map) {
+      if (args['story'] is AudioStoryModel) {
+        story.value = args['story'];
+        storyId.value = story.value!.id;
+        isLoading.value = false;
+      } else if (args['id'] != null) {
+        storyId.value = args['id'].toString();
+      } else if (args['storyId'] != null) {
+        storyId.value = args['storyId'].toString();
+      }
+      if (story.value == null && storyId.value.isNotEmpty && Get.isRegistered<AudioStoriesController>()) {
+        try {
+          final cached = Get.find<AudioStoriesController>().getStoryById(storyId.value);
+          if (cached != null) {
+            story.value = cached;
+            isLoading.value = false;
+          }
+        } catch (_) {}
+      }
+      if (storyId.value.isNotEmpty) {
+        fetchStoryDetail(storyId.value);
+      } else {
+        isLoading.value = false;
+      }
+    } else {
+      isLoading.value = false;
     }
   }
 
   Future<void> fetchStoryDetail(String id) async {
     if (id.isEmpty) return;
     try {
-      isLoading.value = true;
+      if (story.value == null) {
+        isLoading.value = true;
+      }
       final result = await _repository.getAudioStoryDetail(id);
       if (result != null) {
         story.value = result;
+      }
+
+      // If episodes are still empty, try fetching them separately
+      if (story.value == null || story.value!.episodes.isEmpty) {
+        final episodes = await _repository.fetchAudioEpisodes(id);
+        if (episodes.isNotEmpty) {
+          if (story.value != null) {
+            story.value = story.value!.copyWith(
+              episodes: episodes,
+              totalEpisodes: episodes.length,
+            );
+          } else {
+            // Create a basic story model if none exists
+            story.value = AudioStoryModel(
+              id: id,
+              title: 'Audio Story',
+              episodes: episodes,
+              totalEpisodes: episodes.length,
+            );
+          }
+        }
       }
       await fetchMoreLikeThis();
     } catch (e) {

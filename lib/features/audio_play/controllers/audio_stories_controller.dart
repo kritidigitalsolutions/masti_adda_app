@@ -291,8 +291,8 @@ class AudioStoriesController extends GetxController {
     return filtered.isNotEmpty ? filtered : categoryStories;
   }
 
-  /// 6. Search Stories (Instant local filter on all loaded content)
-  void onSearchChanged(String query) {
+  /// 6. Search Stories (Remote backend search + local filter fallback)
+  Future<void> onSearchChanged(String query) async {
     final q = query.trim().toLowerCase();
     searchQuery.value = query.trim();
     if (q.isEmpty) {
@@ -301,33 +301,42 @@ class AudioStoriesController extends GetxController {
       return;
     }
 
-    final allKnown = <AudioStoryModel>{
-      ...allStories,
-      ...featuredStories,
-      ...recentlyAddedStories,
-      ...topRatedStories,
-    };
+    isSearching.value = true;
+    try {
+      final remoteResults = await _repository.searchAudioStories(q);
 
-    final matches = allKnown.where((story) {
-      final titleMatch = story.title.toLowerCase().contains(q);
-      final subtitleMatch = story.subtitle.toLowerCase().contains(q);
-      final authorMatch = story.author.toLowerCase().contains(q);
-      final narratorMatch = story.narrator.toLowerCase().contains(q);
-      final genreMatch = story.genre.toLowerCase().contains(q);
-      final descMatch = story.description.toLowerCase().contains(q);
-      final catMatch = story.categories.any((c) => c.name.toLowerCase().contains(q));
+      final allKnown = <AudioStoryModel>{
+        ...remoteResults,
+        ...allStories,
+        ...featuredStories,
+        ...recentlyAddedStories,
+        ...topRatedStories,
+      };
 
-      return titleMatch ||
-          subtitleMatch ||
-          authorMatch ||
-          narratorMatch ||
-          genreMatch ||
-          descMatch ||
-          catMatch;
-    }).toList();
+      final matches = allKnown.where((story) {
+        final titleMatch = story.title.toLowerCase().contains(q);
+        final subtitleMatch = story.subtitle.toLowerCase().contains(q);
+        final authorMatch = story.author.toLowerCase().contains(q);
+        final narratorMatch = story.narrator.toLowerCase().contains(q);
+        final genreMatch = story.genre.toLowerCase().contains(q);
+        final descMatch = story.description.toLowerCase().contains(q);
+        final catMatch = story.categories.any((c) => c.name.toLowerCase().contains(q));
 
-    searchResults.assignAll(matches);
-    isSearching.value = false;
+        return titleMatch ||
+            subtitleMatch ||
+            authorMatch ||
+            narratorMatch ||
+            genreMatch ||
+            descMatch ||
+            catMatch;
+      }).toList();
+
+      searchResults.assignAll(matches);
+    } catch (e) {
+      debugPrint("onSearchChanged error: $e");
+    } finally {
+      isSearching.value = false;
+    }
   }
 
   void clearSearch() {
@@ -363,7 +372,7 @@ class AudioStoriesController extends GetxController {
   void onStoryTap(AudioStoryModel story) {
     Get.toNamed(
       AppRoutes.audioDetail,
-      arguments: story.id.isNotEmpty ? story.id : story,
+      arguments: story,
     );
   }
 

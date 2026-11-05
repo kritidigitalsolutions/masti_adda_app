@@ -89,6 +89,7 @@ class HomeContent {
   final String updatedAt;
   final String slug;
   final bool isPublished;
+  final bool isHide;
   final String type;
   final bool isTrending;
 
@@ -129,6 +130,7 @@ class HomeContent {
     required this.updatedAt,
     required this.slug,
     required this.isPublished,
+    this.isHide = false,
     required this.type,
     required this.isTrending,
     this.totalSeasons,
@@ -138,7 +140,12 @@ class HomeContent {
     required this.episodes,
   });
 
+  bool get isVisible => !isHide;
+
   factory HomeContent.fromJson(Map<String, dynamic> json) {
+    final dynamic hide = json['isHide'] ?? json['is_hide'] ?? json['hide'];
+    final bool isHideParsed = hide == true || hide == 1 || hide.toString().toLowerCase() == 'true';
+
     return HomeContent(
       id: json['_id'] ?? '',
       title: json['title'] ?? '',
@@ -172,6 +179,7 @@ class HomeContent {
       updatedAt: json['updatedAt'] ?? '',
       slug: json['slug'] ?? '',
       isPublished: json['isPublished'] ?? false,
+      isHide: isHideParsed,
       type: json['type'] ?? '',
       isTrending: json['isTrending'] ?? false,
       totalSeasons: json['totalSeasons'],

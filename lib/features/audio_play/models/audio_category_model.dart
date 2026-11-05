@@ -1,7 +1,10 @@
+import 'package:masti_adda_app/utils/helpers.dart';
+
 class AudioCategoryModel {
   final String id;
   final String name;
   final String slug;
+  final String icon;
   final num priority;
   final String description;
   final bool isActive;
@@ -13,6 +16,7 @@ class AudioCategoryModel {
     required this.id,
     required this.name,
     this.slug = '',
+    this.icon = '',
     this.priority = 0,
     this.description = '',
     this.isActive = true,
@@ -21,11 +25,14 @@ class AudioCategoryModel {
     this.v = 0,
   });
 
+  String get iconUrl => formatMediaUrl(icon);
+
   factory AudioCategoryModel.fromJson(Map<String, dynamic> json) {
     return AudioCategoryModel(
       id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? json['title']?.toString() ?? '',
       slug: json['slug']?.toString() ?? '',
+      icon: json['icon']?.toString() ?? json['image']?.toString() ?? '',
       priority: (json['priority'] as num?) ?? 0,
       description: json['description']?.toString() ?? '',
       isActive: json['isActive'] ?? true,
@@ -43,6 +50,7 @@ class AudioCategoryModel {
     '_id': id,
     'name': name,
     'slug': slug,
+    'icon': icon,
     'priority': priority,
     'description': description,
     'isActive': isActive,
@@ -55,6 +63,7 @@ class AudioCategoryModel {
     String? id,
     String? name,
     String? slug,
+    String? icon,
     num? priority,
     String? description,
     bool? isActive,
@@ -66,6 +75,7 @@ class AudioCategoryModel {
       id: id ?? this.id,
       name: name ?? this.name,
       slug: slug ?? this.slug,
+      icon: icon ?? this.icon,
       priority: priority ?? this.priority,
       description: description ?? this.description,
       isActive: isActive ?? this.isActive,

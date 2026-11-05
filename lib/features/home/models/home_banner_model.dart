@@ -31,6 +31,7 @@ class HomeBannerItem {
   final String? contentType;
   final int? order;
   final bool? isActive;
+  final bool? isHide;
   final HomeBannerContent? content;
   final String? createdAt;
 
@@ -41,20 +42,41 @@ class HomeBannerItem {
     this.contentType,
     this.order,
     this.isActive,
+    this.isHide,
     this.content,
     this.createdAt,
   });
 
+  bool get isVisible {
+    if (isActive == false) return false;
+    if (isHide == true) return false;
+    if (content != null && !content!.isVisible) return false;
+    return true;
+  }
+
   factory HomeBannerItem.fromJson(Map<String, dynamic> json) {
+    final dynamic active = json['isActive'] ?? json['is_active'] ?? json['active'];
+    final bool? isActiveParsed = active == null
+        ? null
+        : (active == true || active == 1 || active.toString().toLowerCase() == 'true');
+
+    final dynamic hide = json['isHide'] ?? json['is_hide'] ?? json['hide'];
+    final bool? isHideParsed = hide == null
+        ? null
+        : (hide == true || hide == 1 || hide.toString().toLowerCase() == 'true');
+
+    final contentJson = json['contentId'] ?? json['content'];
+
     return HomeBannerItem(
-      id: json['_id'],
+      id: json['_id'] ?? json['id'],
       title: json['title'],
       banner: json['banner'],
       contentType: json['contentType'],
       order: json['order'],
-      isActive: json['isActive'],
-      content: json['contentId'] is Map<String, dynamic>
-          ? HomeBannerContent.fromJson(json['contentId'])
+      isActive: isActiveParsed,
+      isHide: isHideParsed,
+      content: contentJson is Map<String, dynamic>
+          ? HomeBannerContent.fromJson(contentJson)
           : null,
       createdAt: json['createdAt'],
     );
@@ -68,6 +90,7 @@ class HomeBannerItem {
       'contentType': contentType,
       'order': order,
       'isActive': isActive,
+      'isHide': isHide,
       'contentId': content?.toJson(),
       'createdAt': createdAt,
     };
@@ -88,6 +111,7 @@ class HomeBannerContent {
   final String? trailerUrl;
   final String? type;
   final String? modelName;
+  final bool? isHide;
 
   HomeBannerContent({
     this.id,
@@ -103,11 +127,19 @@ class HomeBannerContent {
     this.trailerUrl,
     this.type,
     this.modelName,
+    this.isHide,
   });
 
+  bool get isVisible => !(isHide ?? false);
+
   factory HomeBannerContent.fromJson(Map<String, dynamic> json) {
+    final dynamic hide = json['isHide'] ?? json['is_hide'] ?? json['hide'];
+    final bool? isHideParsed = hide == null
+        ? null
+        : (hide == true || hide == 1 || hide.toString().toLowerCase() == 'true');
+
     return HomeBannerContent(
-      id: json['_id'],
+      id: json['_id'] ?? json['id'],
       title: json['title'],
       storyline: json['storyline'],
       poster: json['poster'],
@@ -120,6 +152,7 @@ class HomeBannerContent {
       trailerUrl: json['trailerUrl']?.toString() ?? json['trailer']?.toString(),
       type: json['type'],
       modelName: json['modelName'],
+      isHide: isHideParsed,
     );
   }
 
@@ -138,6 +171,7 @@ class HomeBannerContent {
       'trailerUrl': trailerUrl,
       'type': type,
       'modelName': modelName,
+      'isHide': isHide,
     };
   }
 }
