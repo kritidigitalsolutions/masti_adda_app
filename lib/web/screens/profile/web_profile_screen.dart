@@ -676,8 +676,15 @@ class _WebProfileScreenState extends State<WebProfileScreen> {
           _ProfileListTile(
             icon: Icons.money_off_outlined,
             title: 'Refund Policy',
-            showDivider: false,
             onTap: () => _openLegalModal('refund-policy', 'Refund Policy'),
+          ),
+          _ProfileListTile(
+            icon: Icons.delete_forever_outlined,
+            title: 'Delete Account',
+            iconColor: Colors.redAccent,
+            textColor: Colors.redAccent,
+            showDivider: false,
+            onTap: () => Get.toNamed(WebRoutes.deleteAccount),
           ),
         ],
       ),
@@ -2130,6 +2137,8 @@ class _ProfileListTile extends StatelessWidget {
   final String? trailingText;
   final VoidCallback onTap;
   final bool showDivider;
+  final Color? iconColor;
+  final Color? textColor;
 
   const _ProfileListTile({
     required this.icon,
@@ -2137,6 +2146,8 @@ class _ProfileListTile extends StatelessWidget {
     required this.onTap,
     this.trailingText,
     this.showDivider = true,
+    this.iconColor,
+    this.textColor,
   });
 
   @override
@@ -2148,8 +2159,8 @@ class _ProfileListTile extends StatelessWidget {
             horizontal: 16,
             vertical: 2,
           ),
-          leading: Icon(icon, color: AppColors.secondaryTextColor, size: 22),
-          title: Text(title, style: text14(color: AppColors.textColor)),
+          leading: Icon(icon, color: iconColor ?? AppColors.secondaryTextColor, size: 22),
+          title: Text(title, style: text14(color: textColor ?? AppColors.textColor)),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

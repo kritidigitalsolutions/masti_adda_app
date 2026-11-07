@@ -6,6 +6,7 @@ import 'package:masti_adda_app/web/screens/dramas/web_dramas_screen.dart';
 import 'package:masti_adda_app/web/screens/home/web_home_screen.dart';
 import 'package:masti_adda_app/web/screens/movies/web_movies_screen.dart';
 import 'package:masti_adda_app/web/screens/player/web_player_screen.dart';
+import 'package:masti_adda_app/web/screens/profile/web_delete_account_screen.dart';
 import 'package:masti_adda_app/web/screens/profile/web_profile_screen.dart';
 import 'package:masti_adda_app/web/screens/search/web_search_screen.dart';
 import 'package:masti_adda_app/web/screens/series/web_series_screen.dart';
@@ -67,6 +68,12 @@ abstract class WebPages {
     GetPage(
       name: WebRoutes.profile,
       page: () => const WebProfileScreen(),
+      transition: Transition.fadeIn,
+      transitionDuration: const Duration(milliseconds: 250),
+    ),
+    GetPage(
+      name: WebRoutes.deleteAccount,
+      page: () => const WebDeleteAccountScreen(),
       transition: Transition.fadeIn,
       transitionDuration: const Duration(milliseconds: 250),
     ),

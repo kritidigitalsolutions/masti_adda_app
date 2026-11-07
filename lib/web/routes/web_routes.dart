@@ -11,4 +11,5 @@ class WebRoutes {
   static const login = '/login';
   static const subscription = '/subscription';
   static const paymentStatus = '/payment/status';
+  static const deleteAccount = '/delete-account';
 }
